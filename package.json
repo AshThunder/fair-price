@@ -18,6 +18,8 @@
     "db:inspect": "tsx scripts/db-inspect.ts",
     "e2e:live": "tsx scripts/e2e-live.ts",
     "e2e:telegram": "tsx scripts/telegram-live.ts",
+    "telegram:transcript": "tsx scripts/telegram-transcript.ts",
+    "telegram:configure": "tsx scripts/configure-telegram.ts",
     "ocr:check": "tsx scripts/ocr-check.ts",
     "shots": "tsx scripts/shots.ts",
     "db:migrate": "tsx scripts/db-migrate.ts",

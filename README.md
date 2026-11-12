@@ -48,7 +48,7 @@ Details:
 - **Reppo Eval Router** (`https://eval.reppo.xyz/api/v1/agents/evals`). When someone confirms what they paid on a live check, the evidence pack, the verdict, and the paid amount go to Reppo as one `claim` eval. Status refreshes lazily when the check is read, so it works on serverless. On completion, a score of 85 or more multiplies that confirmation's trust by 1.15 (capped at 1.2); a rejection or a score under 60 halves it (floor 0.05). Each eval is applied once and recorded as boosted, unchanged, or reduced.
 - **Anything, anywhere.** Every ISO country and currency is supported, with `Intl.NumberFormat` money formatting and local units (pounds and US gallons in the US, kilograms and litres elsewhere). Items and places are free text: a new item or town gets its own key, starts as "not sure yet", and builds a range from confirmations.
 - **Photo reader** runs in the browser with tesseract.js after a greyscale and contrast pass. Photos are never uploaded. It reads currency marks such as ₦, $, £, €, ₹, KSh and R$, skips pack sizes such as 75cl, and always asks you to check the number.
-- **Telegram bot** asks for your country once (or reads it from your Telegram language when it has a region), then takes any item, any town, and a price in that currency. `/country`, `/board`, `/metrics`, `/demo`.
+- **Telegram bot** uses buttons, not slash commands: Check a price, Price board, How it works, Change country, and Accuracy. It asks for your country once (or reads it from your Telegram language when it has a region), then guides you through the item, unit, place and price. The verdict has I paid this, Looks fair and Looks off. How it works, the board and Accuracy include a short summary and a link to the web page. Slash commands still work as hidden fallbacks; the bot menu only lists `/start`.
 - **Abuse limits**: 30 checks and 20 confirmations per 10 minutes per IP and device, per instance.
 
 ## Countries with starter data
@@ -78,7 +78,7 @@ npm run dev
 Then open http://127.0.0.1:5173. The Vite dev server proxies `/api` to the API on http://127.0.0.1:3001.
 
 - Production-style serve after a build: `npm run build && npm start` (API and app on http://127.0.0.1:3001)
-- Telegram long-poll (no public webhook needed): with the API running, `npm run dev:bot`, then message [@FairpriceSERV_bot](https://t.me/FairpriceSERV_bot)
+- Telegram long-poll (no public webhook needed): with the API running, `npm run dev:bot`, then open [@FairpriceSERV_bot](https://t.me/FairpriceSERV_bot) and tap Start
 
 Demo mode (header switch, or `?demo=1`) uses seeded data and saved Reppo evals. It never calls SERV or Reppo and never mixes with live data. Add `?country=KE` (any ISO code) to open in a given country; otherwise the app guesses from your time zone and browser language, and remembers your pick.
 
@@ -152,6 +152,8 @@ Honest limits: Nigeria's 73 cases and numbers are unchanged from the Nigeria-onl
 - `npm test`: engine, API, database, benchmark, SERV client, OCR parser, and Telegram handler tests (in-memory store, no keys)
 - `npm run e2e:live`: one live check through SERV, one paid confirmation to Reppo (spends one eval), polls it, and writes `reports/e2e-live.json`
 - `npm run e2e:telegram`: `getMe` on the bot token, then synthetic updates through the webhook route with a captured sender (nobody is messaged)
+- `npm run telegram:transcript`: runs the real handler on a synthetic conversation and writes `reports/telegram-transcript.json` for the demo video
+- `npm run telegram:configure`: sets the bot menu, descriptions and webhook `allowed_updates` (prints no secrets)
 - `npm run ocr:check`: runs the in-browser photo reader in headless Chrome on the tag photos in `tests/fixtures`
 - `npm run shots`: refreshes `shots/` in demo mode, at 390 and 360 px phone widths and 1440 and 1280 px desktop widths
 

@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" width="640" height="640" role="img" aria-label="Ada, the Fair Price market trader">
+  <rect width="640" height="640" fill="#f5c518"/>
+  <circle cx="320" cy="320" r="292" fill="#fbe58a"/>
+  <circle cx="320" cy="320" r="292" fill="none" stroke="#1a1a1a" stroke-width="0"/>
+  <!-- ground shadow -->
+  <ellipse cx="320" cy="575" rx="210" ry="16" fill="#1a1a1a" opacity="0.12"/>
+  <g transform="translate(320 318) scale(2.15) translate(-120 -118)">
+    <!-- navy wrapper / shoulders -->
+    <path d="M76 164 q44 -20 88 0 l14 60 h-116 z" fill="#1f4e79" stroke="#1a1a1a" stroke-width="4" stroke-linejoin="round"/>
+    <g fill="#f5c518">
+      <circle cx="96" cy="186" r="4"></circle>
+      <circle cx="120" cy="198" r="4"></circle>
+      <circle cx="144" cy="186" r="4"></circle>
+      <circle cx="104" cy="212" r="4"></circle>
+      <circle cx="136" cy="212" r="4"></circle>
+    </g>
+    <path d="M104 160 q16 14 32 0" fill="#6f3a20" stroke="#1a1a1a" stroke-width="3.5"/>
+    <!-- earrings -->
+    <circle cx="72" cy="104" r="9" fill="#8a4b2a" stroke="#1a1a1a" stroke-width="3.5"/>
+    <circle cx="168" cy="104" r="9" fill="#8a4b2a" stroke="#1a1a1a" stroke-width="3.5"/>
+    <circle cx="71" cy="120" r="6" fill="none" stroke="#1a1a1a" stroke-width="6"/>
+    <circle cx="71" cy="120" r="6" fill="none" stroke="#f5c518" stroke-width="3"/>
+    <circle cx="169" cy="120" r="6" fill="none" stroke="#1a1a1a" stroke-width="6"/>
+    <circle cx="169" cy="120" r="6" fill="none" stroke="#f5c518" stroke-width="3"/>
+    <!-- face -->
+    <ellipse cx="120" cy="102" rx="47" ry="44" fill="#8a4b2a" stroke="#1a1a1a" stroke-width="4"/>
+    <circle cx="94" cy="114" r="7" fill="#b0603a"/>
+    <circle cx="146" cy="114" r="7" fill="#b0603a"/>
+    <path d="M118 104 q-4 8 2 10" fill="none" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round"/>
+    <g fill="none" stroke="#1a1a1a" stroke-width="4.5" stroke-linecap="round">
+      <path d="M94 82 q10 -6 20 -1"/>
+      <path d="M126 81 q10 -5 20 1"/>
+    </g>
+    <g>
+      <ellipse cx="104" cy="98" rx="8" ry="9" fill="#fff" stroke="#1a1a1a" stroke-width="3"/>
+      <ellipse cx="136" cy="98" rx="8" ry="9" fill="#fff" stroke="#1a1a1a" stroke-width="3"/>
+      <circle cx="105" cy="99" r="4.5" fill="#1a1a1a"/>
+      <circle cx="137" cy="99" r="4.5" fill="#1a1a1a"/>
+      <circle cx="107" cy="96" r="1.6" fill="#fff"/>
+      <circle cx="139" cy="96" r="1.6" fill="#fff"/>
+    </g>
+    <path d="M106 117 q14 14 28 0" fill="none" stroke="#1a1a1a" stroke-width="4" stroke-linecap="round"/>
+    <!-- gele and gold flourish -->
+    <g transform="translate(0 -9)">
+      <path d="M66 84 q-6 -46 54 -60 q60 6 56 58 q-24 -18 -56 -18 q-32 0 -54 20 z" fill="#e23d28" stroke="#1a1a1a" stroke-width="4" stroke-linejoin="round"/>
+      <g fill="none" stroke="#b82a19" stroke-width="4" stroke-linecap="round">
+        <path d="M82 58 q36 -22 76 2"/>
+        <path d="M88 40 q30 -14 60 0"/>
+      </g>
+      <path d="M150 40 q34 -30 56 -6 q-10 10 -24 8 q10 14 -4 28 q-14 -14 -28 -30z" fill="#f5c518" stroke="#1a1a1a" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M160 40 q18 -12 34 -4" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M66 84 q54 -34 110 -2" fill="none" stroke="#1a1a1a" stroke-width="4" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,551 @@
+{
+  "generatedAt": "2026-11-12T18:05:34.771Z",
+  "site": "https://fairprice-global.vercel.app",
+  "bot": "@FairpriceSERV_bot",
+  "note": "Synthetic updates through the real handler with a captured sender. Demo mode is on, so no SERV or Reppo credits are spent and nobody is messaged. Hidden turns are setup only and should be omitted from the demo video.",
+  "chatId": 880001,
+  "turns": [
+    {
+      "from": "user",
+      "kind": "message",
+      "text": "/demo on",
+      "hidden": true
+    },
+    {
+      "from": "bot",
+      "kind": "message",
+      "method": "sendMessage",
+      "text": "Demo mode is on. Checks use seeded data and saved Reppo scores, with no live credit spend.",
+      "reply_markup": {
+        "keyboard": [
+          [
+            {
+              "text": "Check a price"
+            },
+            {
+              "text": "Price board"
+            }
+          ],
+          [
+            {
+              "text": "How it works"
+            },
+            {
+              "text": "Change country"
+            }
+          ],
+          [
+            {
+              "text": "Accuracy"
+            }
+          ]
+        ],
+        "resize_keyboard": true,
+        "one_time_keyboard": false,
+        "is_persistent": true
+      },
+      "message_id": 201,
+      "hidden": true
+    },
+    {
+      "from": "user",
+      "kind": "message",
+      "text": "/start"
+    },
+    {
+      "from": "bot",
+      "kind": "message",
+      "method": "sendMessage",
+      "text": "Ada here. Fair Price checks whether a quoted price is fair, for anything, anywhere, in local currency.\n\nThe Fair Price engine finds the usual range from cited public prices and confirmed payments. SERV Reasoning by OpenServ explains the verdict. When you confirm what you paid, Reppo's Eval Router scores the check independently, and that score sets how much the confirmation counts.\n\nPick a button to start.",
+      "reply_markup": {
+        "keyboard": [
+          [
+            {
+              "text": "Check a price"
+            },
+            {
+              "text": "Price board"
+            }
+          ],
+          [
+            {
+              "text": "How it works"
+            },
+            {
+              "text": "Change country"
+            }
+          ],
+          [
+            {
+              "text": "Accuracy"
+            }
+          ]
+        ],
+        "resize_keyboard": true,
+        "one_time_keyboard": false,
+        "is_persistent": true
+      },
+      "message_id": 202
+    },
+    {
+      "from": "user",
+      "kind": "message",
+      "text": "How it works"
+    },
+    {
+      "from": "bot",
+      "kind": "message",
+      "method": "sendMessage",
+      "text": "How Fair Price works\n\n1. Fair Price engine finds the usual range from cited public prices and confirmed payments in your currency. It never mixes currencies.\n\n2. SERV Reasoning by OpenServ reads your quote against that range and explains the verdict, with a haggling tip.\n\n3. When you confirm what you paid, Reppo's Eval Router scores the check independently. High scores raise how much that confirmation counts, low scores cut it.\n\nOpen the site for the full walk-through.",
+      "reply_markup": {
+        "inline_keyboard": [
+          [
+            {
+              "text": "How it works on the web",
+              "url": "https://fairprice-global.vercel.app/how"
+            }
+          ]
+        ]
+      },
+      "message_id": 203
+    },
+    {
+      "from": "user",
+      "kind": "message",
+      "text": "Check a price"
+    },
+    {
+      "from": "bot",
+      "kind": "message",
+      "method": "sendMessage",
+      "text": "Which country are you in? Pick one, or tap Other and type any country name or code, for example Ghana or DE.",
+      "reply_markup": {
+        "inline_keyboard": [
+          [
+            {
+              "text": "Nigeria",
+              "callback_data": "cc:NG"
+            },
+            {
+              "text": "United States",
+              "callback_data": "cc:US"
+            },
+            {
+              "text": "United Kingdom",
+              "callback_data": "cc:GB"
+            }
+          ],
+          [
+            {
+              "text": "India",
+              "callback_data": "cc:IN"
+            },
+            {
+              "text": "Kenya",
+              "callback_data": "cc:KE"
+            },
+            {
+              "text": "Brazil",
+              "callback_data": "cc:BR"
+            }
+          ],
+          [
+            {
+              "text": "Ghana",
+              "callback_data": "cc:GH"
+            },
+            {
+              "text": "South Africa",
+              "callback_data": "cc:ZA"
+            },
+            {
+              "text": "Canada",
+              "callback_data": "cc:CA"
+            }
+          ],
+          [
+            {
+              "text": "Other",
+              "callback_data": "cc:_other"
+            }
+          ]
+        ]
+      },
+      "message_id": 204
+    },
+    {
+      "from": "user",
+      "kind": "callback",
+      "text": "Kenya",
+      "callback_data": "cc:KE"
+    },
+    {
+      "from": "bot",
+      "kind": "answer",
+      "method": "answerCallbackQuery",
+      "text": "Country set to Kenya."
+    },
+    {
+      "from": "bot",
+      "kind": "message",
+      "method": "sendMessage",
+      "text": "Checking a price in Kenya (KES). What are you buying? Pick a common item or type anything, for example eggs, petrol, or a haircut.",
+      "reply_markup": {
+        "keyboard": [
+          [
+            {
+              "text": "Super petrol"
+            },
+            {
+              "text": "Cooking gas refill (LPG)"
+            }
+          ],
+          [
+            {
+              "text": "Fresh unpacketed milk"
+            },
+            {
+              "text": "White sugar"
+            }
+          ],
+          [
+            {
+              "text": "Wheat flour"
+            },
+            {
+              "text": "Something else"
+            }
+          ]
+        ],
+        "resize_keyboard": true,
+        "one_time_keyboard": true,
+        "is_persistent": false
+      },
+      "message_id": 205
+    },
+    {
+      "from": "user",
+      "kind": "message",
+      "text": "Petrol"
+    },
+    {
+      "from": "bot",
+      "kind": "message",
+      "method": "sendMessage",
+      "text": "What unit is that price for? Petrol is often priced per 1 litre. Pick one or type a unit.",
+      "reply_markup": {
+        "keyboard": [
+          [
+            {
+              "text": "1 litre"
+            },
+            {
+              "text": "each"
+            }
+          ],
+          [
+            {
+              "text": "1 kg"
+            },
+            {
+              "text": "1 lb"
+            }
+          ],
+          [
+            {
+              "text": "dozen"
+            },
+            {
+              "text": "trip"
+            }
+          ],
+          [
+            {
+              "text": "hour"
+            },
+            {
+              "text": "month"
+            }
+          ],
+          [
+            {
+              "text": "Type a unit"
+            }
+          ]
+        ],
+        "resize_keyboard": true,
+        "one_time_keyboard": true,
+        "is_persistent": false
+      },
+      "message_id": 206
+    },
+    {
+      "from": "user",
+      "kind": "message",
+      "text": "1 litre"
+    },
+    {
+      "from": "bot",
+      "kind": "message",
+      "method": "sendMessage",
+      "text": "Where are you buying petrol? Pick a place, type a town or city, or choose Whole country.",
+      "reply_markup": {
+        "keyboard": [
+          [
+            {
+              "text": "Nairobi"
+            },
+            {
+              "text": "Mombasa"
+            }
+          ],
+          [
+            {
+              "text": "Kisumu"
+            },
+            {
+              "text": "Nakuru"
+            }
+          ],
+          [
+            {
+              "text": "Whole country"
+            },
+            {
+              "text": "Type a city"
+            }
+          ]
+        ],
+        "resize_keyboard": true,
+        "one_time_keyboard": true,
+        "is_persistent": false
+      },
+      "message_id": 207
+    },
+    {
+      "from": "user",
+      "kind": "message",
+      "text": "Nairobi"
+    },
+    {
+      "from": "bot",
+      "kind": "message",
+      "method": "sendMessage",
+      "text": "What price were you quoted, in KES? Type the number only.",
+      "reply_markup": {
+        "remove_keyboard": true
+      },
+      "message_id": 208
+    },
+    {
+      "from": "user",
+      "kind": "message",
+      "text": "220"
+    },
+    {
+      "from": "bot",
+      "kind": "message",
+      "method": "sendMessage",
+      "text": "Verdict: Fair price for Super petrol in Nairobi, Kenya.\nQuoted Ksh 220 per 1 litre.\nUsual range Ksh 193 to Ksh 261, middle Ksh 227.\n\nThe quote sits inside the recent Nairobi range for Super petrol, around Ksh 227.\n\nTip: This sits inside the recent range of Ksh 193 to Ksh 261 per 1 litre. Still confirm the unit before you pay.\n\nInside the usual range. Range by Fair Price engine. Demo text, no SERV call. Reppo scores it once you confirm.\nIf you paid, tap I paid this, or send the amount, for example: paid 220",
+      "reply_markup": {
+        "inline_keyboard": [
+          [
+            {
+              "text": "I paid this",
+              "callback_data": "fb:paid"
+            },
+            {
+              "text": "Looks fair",
+              "callback_data": "fb:fair"
+            },
+            {
+              "text": "Looks off",
+              "callback_data": "fb:off"
+            }
+          ],
+          [
+            {
+              "text": "Check another",
+              "callback_data": "fb:again"
+            },
+            {
+              "text": "Main menu",
+              "callback_data": "fb:menu"
+            }
+          ]
+        ]
+      },
+      "message_id": 209
+    },
+    {
+      "from": "user",
+      "kind": "callback",
+      "text": "I paid this",
+      "callback_data": "fb:paid"
+    },
+    {
+      "from": "bot",
+      "kind": "answer",
+      "method": "answerCallbackQuery"
+    },
+    {
+      "from": "bot",
+      "kind": "message",
+      "method": "sendMessage",
+      "text": "What did you pay, in KES? Type the number, or tap the quoted amount.",
+      "reply_markup": {
+        "inline_keyboard": [
+          [
+            {
+              "text": "I paid Ksh 220",
+              "callback_data": "fb:quoted"
+            }
+          ],
+          [
+            {
+              "text": "Main menu",
+              "callback_data": "fb:menu"
+            }
+          ]
+        ]
+      },
+      "message_id": 210
+    },
+    {
+      "from": "user",
+      "kind": "callback",
+      "text": "I paid the quoted amount",
+      "callback_data": "fb:quoted"
+    },
+    {
+      "from": "bot",
+      "kind": "answer",
+      "method": "answerCallbackQuery"
+    },
+    {
+      "from": "bot",
+      "kind": "message",
+      "method": "sendMessage",
+      "text": "Saved. Thank you, this helps the next person nearby.",
+      "reply_markup": {
+        "keyboard": [
+          [
+            {
+              "text": "Check a price"
+            },
+            {
+              "text": "Price board"
+            }
+          ],
+          [
+            {
+              "text": "How it works"
+            },
+            {
+              "text": "Change country"
+            }
+          ],
+          [
+            {
+              "text": "Accuracy"
+            }
+          ]
+        ],
+        "resize_keyboard": true,
+        "one_time_keyboard": false,
+        "is_persistent": true
+      },
+      "message_id": 211
+    },
+    {
+      "from": "user",
+      "kind": "message",
+      "text": "Accuracy"
+    },
+    {
+      "from": "bot",
+      "kind": "message",
+      "method": "sendMessage",
+      "text": "Benchmark: 116 price cases across 6 countries, held-out test split 83 cases.\nPublic figures only: 65% correct (54/83).\nAfter confirmations: 89% correct (74/83).\nReppo scored 0 confirmed checks. Median score n/a.\nOpen the Metrics page for the full breakdown.",
+      "reply_markup": {
+        "inline_keyboard": [
+          [
+            {
+              "text": "Open accuracy on the web",
+              "url": "https://fairprice-global.vercel.app/metrics"
+            }
+          ]
+        ]
+      },
+      "message_id": 212
+    },
+    {
+      "from": "user",
+      "kind": "callback",
+      "text": "Main menu",
+      "callback_data": "fb:menu"
+    },
+    {
+      "from": "bot",
+      "kind": "answer",
+      "method": "answerCallbackQuery"
+    },
+    {
+      "from": "bot",
+      "kind": "message",
+      "method": "sendMessage",
+      "text": "Ada here. Fair Price checks whether a quoted price is fair, for anything, anywhere, in local currency.\n\nThe Fair Price engine finds the usual range from cited public prices and confirmed payments. SERV Reasoning by OpenServ explains the verdict. When you confirm what you paid, Reppo's Eval Router scores the check independently, and that score sets how much the confirmation counts.\n\nPick a button to start.\n\nYour country is set to Kenya (KES). You can change it any time.",
+      "reply_markup": {
+        "keyboard": [
+          [
+            {
+              "text": "Check a price"
+            },
+            {
+              "text": "Price board"
+            }
+          ],
+          [
+            {
+              "text": "How it works"
+            },
+            {
+              "text": "Change country"
+            }
+          ],
+          [
+            {
+              "text": "Accuracy"
+            }
+          ]
+        ],
+        "resize_keyboard": true,
+        "one_time_keyboard": false,
+        "is_persistent": true
+      },
+      "message_id": 213
+    },
+    {
+      "from": "user",
+      "kind": "message",
+      "text": "Price board"
+    },
+    {
+      "from": "bot",
+      "kind": "message",
+      "method": "sendMessage",
+      "text": "Price board for Kenya, KES. Middle and usual range.\n\nSuper petrol per 1 litre: Ksh 228 (Ksh 194 to Ksh 262)\nCooking gas refill (LPG) per 13 kg cylinder: Ksh 3,430 (Ksh 2,915 to Ksh 3,944)\nFresh unpacketed milk per 1 litre: Ksh 81 (Ksh 68 to Ksh 93)\nWhite sugar per 1 kg: Ksh 164 (Ksh 139 to Ksh 188)\nWheat flour per 2 kg: Ksh 185 (Ksh 157 to Ksh 213)",
+      "reply_markup": {
+        "inline_keyboard": [
+          [
+            {
+              "text": "Open the price board",
+              "url": "https://fairprice-global.vercel.app/board"
+            }
+          ]
+        ]
+      },
+      "message_id": 214
+    }
+  ]
+}

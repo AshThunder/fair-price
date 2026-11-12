@@ -10,7 +10,7 @@ if (!token) {
 const API = `https://api.telegram.org/bot${token}`;
 let offset = 0;
 
-process.stdout.write("Fair Price Telegram long-poll started. Open the bot and send /start.\n");
+process.stdout.write("Fair Price Telegram long-poll started. Open the bot and tap Start.\n");
 
 async function loop() {
   while (true) {
