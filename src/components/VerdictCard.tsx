@@ -1,6 +1,8 @@
 import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useId, useRef, useState } from "react";
-import { api, naira, type PublicVerdict, type ReppoBadge as Badge } from "../api";
+import { api, money, type PublicVerdict, type ReppoBadge as Badge } from "../api";
+import { currencySymbol } from "../catalog";
+import { perUnit } from "../../shared/geo";
 import { getDeviceId } from "../device";
 import { Mascot } from "./Mascot";
 
@@ -11,30 +13,53 @@ const STAMP: Record<PublicVerdict["label"], string> = {
   uncertain: "Not sure yet",
 };
 
+// One short line per verdict on what each part of the stack did.
+const STACK_LINE: Record<PublicVerdict["label"], string> = {
+  fair: "Inside the usual range",
+  high: "Above the usual range",
+  low: "Below the usual range",
+  uncertain: "Not enough local prices for a range",
+};
+
 const FALLBACK_NOTE: Record<string, string> = {
   local: "local figures",
-  zone: "the zone average",
+  region: "the regional average",
+  zone: "the regional average",
   national: "the national average",
   none: "no figures yet",
 };
 
 function RangeRuler({ v }: { v: PublicVerdict }) {
   const reduce = useReducedMotion();
+  const fmt = (n: number) => money(n, v.currency, v.locale);
   if (v.low == null || v.high == null || v.mid == null) {
-    return <p className="range-empty">No usual range for this area yet. Your confirmed payment starts one.</p>;
+    return (
+      <div className="range-empty">
+        <p className="range-empty-title">Not sure yet, be the first to confirm</p>
+        {v.guess ? (
+          <p>
+            Ada's rough guess: <strong className="figure">{fmt(v.guess.low)}</strong> to{" "}
+            <strong className="figure">{fmt(v.guess.high)}</strong>. That is a guess from SERV Reasoning, not local data.
+          </p>
+        ) : (
+          <p>There are no local prices for this here yet.</p>
+        )}
+        <p className="muted small">Confirm what you pay and the next person nearby gets a real range.</p>
+      </div>
+    );
   }
-  const lo = Math.min(v.low, v.quoteNaira) * 0.9;
-  const hi = Math.max(v.high, v.quoteNaira) * 1.1;
+  const lo = Math.min(v.low, v.quote) * 0.9;
+  const hi = Math.max(v.high, v.quote) * 1.1;
   const pos = (n: number) => `${((n - lo) / (hi - lo)) * 100}%`;
   return (
-    <figure className="ruler" aria-label={`Usual range ${naira(v.low)} to ${naira(v.high)}, middle ${naira(v.mid)}. Your quote ${naira(v.quoteNaira)}.`}>
+    <figure className="ruler" aria-label={`Usual range ${fmt(v.low)} to ${fmt(v.high)}, middle ${fmt(v.mid)}. Your quote ${fmt(v.quote)}.`}>
       <div className="ruler-track" aria-hidden="true">
         <span className="ruler-band" style={{ left: pos(v.low), width: `calc(${pos(v.high)} - ${pos(v.low)})` }} />
         <span className="ruler-mid" style={{ left: pos(v.mid) }} />
         <motion.span
           className={`ruler-needle ${v.label}`}
           initial={reduce ? false : { left: pos(v.mid) }}
-          animate={{ left: pos(v.quoteNaira) }}
+          animate={{ left: pos(v.quote) }}
           transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 160, damping: 14, delay: 0.15 }}
         >
           <span className="ruler-needle-label">You</span>
@@ -43,11 +68,11 @@ function RangeRuler({ v }: { v: PublicVerdict }) {
       <figcaption className="ruler-legend">
         <span>
           <i className="ruler-key ruler-key-band" aria-hidden="true" />
-          Usual {naira(v.low)} to {naira(v.high)}
+          Usual {fmt(v.low)} to {fmt(v.high)}
         </span>
         <span>
           <i className={`ruler-key ruler-key-you ${v.label}`} aria-hidden="true" />
-          You {naira(v.quoteNaira)}
+          You {fmt(v.quote)}
         </span>
       </figcaption>
     </figure>
@@ -138,10 +163,22 @@ export function VerdictSkeleton() {
   );
 }
 
-export function VerdictCard({ verdict, demo, onUpdated }: { verdict: PublicVerdict; demo: boolean; onUpdated?: (v: PublicVerdict) => void }) {
+export function VerdictCard({
+  verdict,
+  demo,
+  onUpdated,
+  showMascot = true,
+}: {
+  verdict: PublicVerdict;
+  demo: boolean;
+  onUpdated?: (v: PublicVerdict) => void;
+  showMascot?: boolean;
+}) {
   const reduce = useReducedMotion();
+  const fmt = (n: number) => money(n, verdict.currency, verdict.locale);
+  const symbol = currencySymbol(verdict.currency, verdict.locale);
   const ids = useId();
-  const [paid, setPaid] = useState(String(Math.round(verdict.quoteNaira)));
+  const [paid, setPaid] = useState(String(verdict.quote));
   const [note, setNote] = useState<{ tone: "ok" | "warn"; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
@@ -169,15 +206,16 @@ export function VerdictCard({ verdict, demo, onUpdated }: { verdict: PublicVerdi
   }, [confirmed, verdict.id, verdict.demo, verdict.reppo?.state, onUpdated]);
 
   async function send(kind: "paid" | "fair" | "not-fair") {
-    const amount = Number(paid.replace(/[,\s₦]/g, ""));
+    const t = paid.replace(/[^\d.,]/g, "");
+    const amount = Number(t.replace(/[.,](?=\d{3}(?:\D|$))/g, "").replace(",", "."));
     if (kind === "paid" && (!Number.isFinite(amount) || amount <= 0)) {
-      setNote({ tone: "warn", text: "Type the amount you paid, in naira" });
+      setNote({ tone: "warn", text: `Type the amount you paid, in ${verdict.currency}` });
       return;
     }
     setBusy(true);
     setNote(null);
     try {
-      const result = await api.feedback({ verdictId: verdict.id, kind, paidNaira: kind === "paid" ? amount : undefined, deviceId: getDeviceId(), demo });
+      const result = await api.feedback({ verdictId: verdict.id, kind, paid: kind === "paid" ? amount : undefined, deviceId: getDeviceId(), demo });
       const status = result.observation?.status;
       if (status === "rejected") setNote({ tone: "warn", text: "You already confirmed this item here today, so this one was not counted" });
       else if (status === "quarantine") setNote({ tone: "warn", text: "That amount is far from what others paid, so it is on hold until more prices agree" });
@@ -216,13 +254,13 @@ export function VerdictCard({ verdict, demo, onUpdated }: { verdict: PublicVerdi
             {STAMP[verdict.label]}
           </motion.p>
           <h2 id={`${ids}-title`} className="verdict-title">
-            <span className="figure">{naira(verdict.quoteNaira)}</span> for {verdict.itemName.toLowerCase()}
+            <span className="figure">{fmt(verdict.quote)}</span> for {verdict.itemName.toLowerCase()}
           </h2>
           <p className="muted">
-            {verdict.areaName}, per {verdict.unit}
+            {verdict.areaName === verdict.countryName ? verdict.countryName : `${verdict.areaName}, ${verdict.countryName}`}, {perUnit(verdict.unit)}
           </p>
         </div>
-        <Mascot mood={verdict.label} size={104} label={`Ada reacts: ${STAMP[verdict.label]}`} />
+        {showMascot ? <Mascot mood={verdict.label} size={104} label={`Ada reacts: ${STAMP[verdict.label]}`} /> : null}
       </div>
 
       <RangeRuler v={verdict} />
@@ -248,6 +286,16 @@ export function VerdictCard({ verdict, demo, onUpdated }: { verdict: PublicVerdi
 
       <ReppoBadge reppo={verdict.reppo} confirmed={confirmed} demo={verdict.demo} />
 
+      <p className="stack-line">
+        <span>{STACK_LINE[verdict.label]}</span>
+        <span aria-hidden="true">·</span>
+        <span>Range by Fair Price engine</span>
+        <span aria-hidden="true">·</span>
+        <span>{verdict.demo ? "Demo text, no SERV call" : verdict.servAvailable ? "Explained by SERV" : "SERV unavailable"}</span>
+        <span aria-hidden="true">·</span>
+        <span>{verdict.reppo?.state === "checked" ? "Scored by Reppo" : "Reppo scores it once you confirm"}</span>
+      </p>
+
       <details className="evidence">
         <summary>Where this range comes from</summary>
         <ul>
@@ -260,10 +308,10 @@ export function VerdictCard({ verdict, demo, onUpdated }: { verdict: PublicVerdi
           ))}
           <li>
             {verdict.demo
-              ? "Demo mode: the verdict uses the code band and seeded data"
+              ? "Demo mode: the verdict uses the engine's range and seeded data"
               : verdict.servAvailable
-                ? "Verdict and tip written by SERV Reasoning, checked against the code band"
-                : "SERV Reasoning was unavailable, so this uses the code band only"}
+                ? "Explanation and tip written by SERV Reasoning; the verdict follows the Fair Price engine's range"
+                : "SERV Reasoning was unavailable, so this uses the Fair Price engine's range only"}
           </li>
         </ul>
       </details>
@@ -272,10 +320,10 @@ export function VerdictCard({ verdict, demo, onUpdated }: { verdict: PublicVerdi
         <h3 id={`${ids}-confirm`}>Did you buy it</h3>
         <div className="confirm-row">
           <div className="money-input">
-            <span aria-hidden="true">₦</span>
+            <span aria-hidden="true">{symbol}</span>
             <input
-              aria-label="Amount you paid, in naira"
-              inputMode="numeric"
+              aria-label={`Amount you paid, in ${verdict.currency}`}
+              inputMode="decimal"
               value={paid}
               onChange={(e) => setPaid(e.target.value)}
               disabled={busy || confirmed}

@@ -134,6 +134,10 @@ export async function refreshEval(evalId: string, opts?: { minIntervalMs?: numbe
       reppoDecision: record.decision,
       reppoReason: record.reason ?? undefined,
     });
+    if (record.status === "COMPLETED") {
+      const effect = await store.applyReppoTrust(evalId, record.verdictId, record.score, record.decision);
+      return { ...record, trustEffect: effect };
+    }
   }
   return record;
 }

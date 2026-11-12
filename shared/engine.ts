@@ -11,6 +11,7 @@ import type {
   ServJudgment,
   VerdictLabel,
 } from "./types.js";
+import { areaChain, areaFromId, itemUnit, localeFor, money, perUnit } from "./geo.js";
 
 export const FAIR_BAND = 0.15;
 export const MIN_SAMPLES_FOR_CERTAIN = 1;
@@ -21,9 +22,12 @@ export const TRUSTED_DEVICE_TRUST = 0.9;
 export const OFFICIAL_BASE_TRUST = 1;
 export const MONTHS_UNTIL_OFFICIAL_HALF = 8;
 
+/** Naira formatting, kept for older callers. Prefer money(amount, currency). */
 export function naira(n: number): string {
-  return `₦${Math.round(n).toLocaleString("en-NG")}`;
+  return money(n, "NGN", "en-NG");
 }
+
+export { money };
 
 export function monthsBetween(fromIsoDate: string, asOf: Date): number {
   const from = new Date(fromIsoDate + (fromIsoDate.length === 10 ? "T00:00:00Z" : ""));
@@ -107,22 +111,24 @@ export function deviceHash(raw: string): string {
 }
 
 export function findArea(areas: Area[], areaId: string): Area | undefined {
-  return areas.find((a) => a.id === areaId);
+  return areaFromId(areas, areaId);
 }
 
-export function fallbackAreaIds(areas: Area[], areaId: string): { local?: string; zone?: string; national?: string } {
-  const area = findArea(areas, areaId);
-  const national = areas.find((a) => a.kind === "national")?.id;
-  if (!area) return { national };
-  if (area.kind === "national") return { national: area.id };
-  if (area.kind === "zone") return { zone: area.id, national };
-  const zone = areas.find((a) => a.kind === "zone" && a.zone === area.zone)?.id;
-  return { local: area.id, zone, national };
+type Level = "local" | "region" | "national";
+
+/** Levels to try, most specific first. Every level is inside the same country. */
+export function fallbackLevels(areas: Area[], areaId: string): Array<{ level: Level; areaId: string }> {
+  const area = areaFromId(areas, areaId);
+  if (!area) return [];
+  const chain = areaChain(areas, area);
+  return chain.map((a, i) => ({
+    level: a.kind === "country" ? "national" : i === 0 ? "local" : "region",
+    areaId: a.id,
+  }));
 }
 
-
-function moreSpecific(a: "local" | "zone" | "national", b: "local" | "zone" | "national"): "local" | "zone" | "national" {
-  const order = { local: 0, zone: 1, national: 2 };
+function moreSpecific(a: Level, b: Level): Level {
+  const order = { local: 0, region: 1, national: 2 };
   return order[a] <= order[b] ? a : b;
 }
 
@@ -137,32 +143,28 @@ export function buildRange(
 ): RangeResult {
   const includeDemo = options?.includeDemo ?? true;
   const seedOnly = options?.seedOnly ?? false;
+  const area = areaFromId(areas, areaId);
+  const currency = area?.currency ?? "";
+  // Prices in another currency are never mixed in, even if an id collides.
+  const sameMoney = (c: string | undefined) => (c ?? currency) === currency;
+  const itemRefs = refs.filter((r) => r.itemId === itemId && sameMoney(r.currency));
   const accepted = seedOnly
     ? []
     : observations.filter((o) => {
         if (o.itemId !== itemId) return false;
         if (o.status !== "accepted") return false;
+        if (!sameMoney(o.currency)) return false;
         if (!includeDemo && o.tag === "demo") return false;
         return true;
       });
 
-  const ids = fallbackAreaIds(areas, areaId);
-  const officialLevel = (["local", "zone", "national"] as const).find((key) => {
-    const area = ids[key];
-    return Boolean(area && refs.some((r) => r.itemId === itemId && r.areaId === area));
-  });
-  const obsLevel = (["local", "zone", "national"] as const).find((key) => {
-    const area = ids[key];
-    return Boolean(area && accepted.some((o) => o.areaId === area));
-  });
-  const fallback = officialLevel ?? obsLevel;
+  const levels = fallbackLevels(areas, areaId);
+  const official = levels.find((l) => itemRefs.some((r) => r.areaId === l.areaId));
+  const obs = levels.find((l) => accepted.some((o) => o.areaId === l.areaId));
+  const fallback = official ?? obs;
   if (fallback) {
-    const officialArea = officialLevel ? ids[officialLevel] : undefined;
-    const obsArea = obsLevel ? ids[obsLevel] : undefined;
-    const localRefs = officialArea
-      ? refs.filter((r) => r.itemId === itemId && r.areaId === officialArea)
-      : [];
-    const localObs = obsArea ? accepted.filter((o) => o.areaId === obsArea) : [];
+    const localRefs = official ? itemRefs.filter((r) => r.areaId === official.areaId) : [];
+    const localObs = obs ? accepted.filter((o) => o.areaId === obs.areaId) : [];
 
     const points: EvidencePoint[] = [];
     for (const r of localRefs) {
@@ -170,7 +172,7 @@ export function buildRange(
       points.push({
         id: r.id,
         kind: "official",
-        priceNaira: r.priceNaira,
+        price: r.price,
         weight: w,
         label: `${r.series} (${r.period})`,
         period: r.period,
@@ -182,14 +184,14 @@ export function buildRange(
       points.push({
         id: o.id,
         kind: "observation",
-        priceNaira: o.priceNaira,
+        price: o.price,
         weight: Math.max(0.1, Math.min(1.2, o.trust)),
         label: o.tag === "demo" ? "Demo confirmation" : "Confirmed payment",
       });
     }
 
-    const mid = weightedMedian(points.map((p) => ({ price: p.priceNaira, weight: p.weight })));
-    const prices = points.map((p) => p.priceNaira);
+    const mid = weightedMedian(points.map((p) => ({ price: p.price, weight: p.weight })));
+    const prices = points.map((p) => p.price);
     let low = percentile(prices, 0.25);
     let high = percentile(prices, 0.75);
     if (mid != null) {
@@ -204,10 +206,7 @@ export function buildRange(
       }
     }
 
-    const grain: RangeResult["fallback"] =
-      officialLevel && obsLevel
-        ? moreSpecific(officialLevel, obsLevel)
-        : (fallback as RangeResult["fallback"]);
+    const grain: Level = official && obs ? moreSpecific(official.level, obs.level) : fallback.level;
 
     return {
       mid,
@@ -218,6 +217,7 @@ export function buildRange(
       observationCount: localObs.length,
       thin: points.length < 2 && mid != null,
       fallback: grain,
+      currency,
       points,
       method: "weighted-median with at least a 15 percent band",
     };
@@ -232,6 +232,7 @@ export function buildRange(
     observationCount: 0,
     thin: true,
     fallback: "none",
+    currency,
     points: [],
     method: "no evidence",
   };
@@ -259,7 +260,7 @@ export function codeVerdict(
   const label = classifyQuote(quote, range);
   const reasonCodes: string[] = [];
   if (range.fallback === "none") reasonCodes.push("no-evidence");
-  else if (range.fallback === "zone") reasonCodes.push("zone-fallback");
+  else if (range.fallback === "region") reasonCodes.push("region-fallback");
   else if (range.fallback === "national") reasonCodes.push("national-fallback");
   if (range.thin) reasonCodes.push("thin-sample");
   if (range.officialCount > 0) reasonCodes.push("has-official");
@@ -267,7 +268,7 @@ export function codeVerdict(
   if (label === "high") reasonCodes.push("above-band");
   if (label === "low") reasonCodes.push("below-band");
   if (label === "fair") reasonCodes.push("inside-band");
-  if (item.category === "repair" || item.category === "rent") {
+  if (item.category === "repair" || item.category === "rent" || item.custom) {
     if (range.observationCount < 3) reasonCodes.push("needs-local-confirms");
   }
   return { label, range, reasonCodes };
@@ -322,20 +323,23 @@ export function hardRulesOverride(
   return { label: r.label, reasons: r.reasons };
 }
 
-export function defaultTip(label: VerdictLabel, item: Item, range: RangeResult, quote: number): string {
+export function defaultTip(label: VerdictLabel, item: Item, range: RangeResult, quote: number, country?: string): string {
+  const cur = range.currency || "NGN";
+  const m = (n: number) => money(n, cur, country ? localeFor(country) : undefined);
+  const unit = country ? itemUnit(item, country) : item.unit;
   if (label === "uncertain") {
-    return `There is not a tight local band for ${item.name} here yet. If you pay, confirm the amount so the next person has a better range.`;
+    return `There is no local range for ${item.name.toLowerCase()} here yet. Ask two nearby sellers, and if you pay, confirm the amount so the next person gets a real range.`;
   }
   if (!range.mid || !range.low || !range.high) {
     return "Ask two nearby sellers and keep the lower quote if the goods match.";
   }
   if (label === "high") {
-    return `Ask for a price closer to ${naira(range.mid)} per ${item.unit}. Sellers often move when you mention a recent area range of ${naira(range.low)} to ${naira(range.high)}.`;
+    return `Ask for a price closer to ${m(range.mid)} ${perUnit(unit)}. Sellers often move when you mention a recent range of ${m(range.low)} to ${m(range.high)}.`;
   }
   if (label === "low") {
-    return `The quote is below the recent area range. Check the quantity, quality, and unit before you pay — a ${naira(quote)} price can hide a short measure.`;
+    return `The quote is below the recent range. Check the quantity, quality, and unit before you pay. A ${m(quote)} price can hide a short measure.`;
   }
-  return `This sits inside the recent area range of ${naira(range.low)} to ${naira(range.high)} per ${item.unit}. Still confirm the unit before you pay.`;
+  return `This sits inside the recent range of ${m(range.low)} to ${m(range.high)} ${perUnit(unit)}. Still confirm the unit before you pay.`;
 }
 
 export interface DeviceStats {
@@ -357,7 +361,7 @@ export function deviceTrust(stats: DeviceStats): number {
 export function applyAntiGaming(args: {
   itemId: string;
   areaId: string;
-  priceNaira: number;
+  price: number;
   deviceHash: string;
   now: Date;
   observations: Observation[];
@@ -366,8 +370,8 @@ export function applyAntiGaming(args: {
   /** Device history from the store; when given it sets trust instead of the observation scan. */
   device?: DeviceStats;
 }): { status: Observation["status"]; trust: number; reason: string } {
-  const { itemId, areaId, priceNaira, deviceHash: hash, now, observations, refs, areas } = args;
-  if (!(priceNaira > 0) || !Number.isFinite(priceNaira)) {
+  const { itemId, areaId, price, deviceHash: hash, now, observations, refs, areas } = args;
+  if (!(price > 0) || !Number.isFinite(price)) {
     return { status: "rejected", trust: 0, reason: "invalid-price" };
   }
   const windowStart = now.getTime() - DUPLICATE_WINDOW_MS;
@@ -385,8 +389,8 @@ export function applyAntiGaming(args: {
       : NEW_DEVICE_TRUST;
 
   const range = buildRange(itemId, areaId, refs, observations, areas, now);
-  const peers = range.points.map((p) => p.priceNaira);
-  if (peers.length > 0 && isOutlier(priceNaira, peers)) {
+  const peers = range.points.map((p) => p.price);
+  if (peers.length > 0 && isOutlier(price, peers)) {
     return { status: "quarantine", trust: Math.min(0.2, trust), reason: "outlier" };
   }
   return { status: "accepted", trust, reason: "ok" };
@@ -415,10 +419,10 @@ export function scoreBenchmark(
     const item = items.find((i) => i.id === c.itemId);
     const area = areas.find((a) => a.id === c.areaId);
     if (!item || !area) continue;
-    const v = codeVerdict(item, area, c.quoteNaira, refs, observations, areas, asOf, options);
+    const v = codeVerdict(item, area, c.quote, refs, observations, areas, asOf, options);
     if (v.label === c.expected) agreed += 1;
-    if (v.range.mid != null && c.trueNaira != null) {
-      mapePairs.push({ predicted: v.range.mid, actual: c.trueNaira });
+    if (v.range.mid != null && c.trueAmount != null) {
+      mapePairs.push({ predicted: v.range.mid, actual: c.trueAmount });
     }
     details.push({ id: c.id, predicted: v.label, expected: c.expected, mid: v.range.mid });
   }

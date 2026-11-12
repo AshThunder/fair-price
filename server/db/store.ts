@@ -27,7 +27,11 @@ function toObservation(r: Row): Observation {
     id: String(r.id),
     itemId: String(r.item_id),
     areaId: String(r.area_id),
-    priceNaira: Number(r.price_naira),
+    price: Number(r.price),
+    currency: String(r.currency ?? "NGN"),
+    unit: (r.unit ?? undefined) as string | undefined,
+    itemName: (r.item_name ?? undefined) as string | undefined,
+    verdictId: (r.verdict_id ?? undefined) as string | undefined,
     source: r.source as Observation["source"],
     status: r.status as Observation["status"],
     trust: Number(r.trust),
@@ -53,6 +57,7 @@ function toReppo(r: Row): ReppoRecord {
     createdAt: iso(r.created_at),
     completedAt: r.completed_at ? iso(r.completed_at) : undefined,
     lastPolledAt: r.last_polled_at ? iso(r.last_polled_at) : undefined,
+    trustEffect: (r.trust_effect as string | null) ?? null,
   };
 }
 
@@ -61,7 +66,8 @@ function toFeedback(r: Row): FeedbackRecord {
     id: String(r.id),
     verdictId: String(r.verdict_id),
     kind: r.kind as FeedbackRecord["kind"],
-    paidNaira: num(r.paid_naira) ?? undefined,
+    paid: num(r.paid) ?? undefined,
+    currency: (r.currency ?? undefined) as string | undefined,
     deviceHash: String(r.device_hash),
     createdAt: iso(r.created_at),
   };
@@ -111,9 +117,9 @@ export class SqlStore {
   async addVerdict(v: StoredVerdict): Promise<StoredVerdict> {
     await this.init();
     await this.db.query(
-      `insert into verdicts (id, item_id, area_id, quote_naira, final, demo, created_at, data)
-       values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)`,
-      [v.id, v.itemId, v.areaId, v.quoteNaira, v.final, v.demo, v.createdAt, JSON.stringify(v)],
+      `insert into verdicts (id, item_id, area_id, quote, currency, country, final, demo, created_at, data)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb)`,
+      [v.id, v.itemId, v.areaId, v.quote, v.currency, v.country, v.final, v.demo, v.createdAt, JSON.stringify(v)],
     );
     return v;
   }
@@ -163,13 +169,17 @@ export class SqlStore {
       createdAt: o.createdAt ?? new Date().toISOString(),
     };
     await this.db.query(
-      `insert into observations (id, item_id, area_id, price_naira, source, status, trust, device_hash, tag, note, created_at)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+      `insert into observations (id, item_id, area_id, price, currency, unit, item_name, verdict_id, source, status, trust, device_hash, tag, note, created_at)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
       [
         row.id,
         row.itemId,
         row.areaId,
-        row.priceNaira,
+        row.price,
+        row.currency,
+        row.unit ?? null,
+        row.itemName ?? null,
+        row.verdictId ?? null,
         row.source,
         row.status,
         row.trust,
@@ -194,8 +204,8 @@ export class SqlStore {
       createdAt: f.createdAt ?? new Date().toISOString(),
     };
     await this.db.query(
-      `insert into feedback (id, verdict_id, kind, paid_naira, device_hash, created_at) values ($1, $2, $3, $4, $5, $6)`,
-      [row.id, row.verdictId, row.kind, row.paidNaira ?? null, row.deviceHash, row.createdAt],
+      `insert into feedback (id, verdict_id, kind, paid, currency, device_hash, created_at) values ($1, $2, $3, $4, $5, $6, $7)`,
+      [row.id, row.verdictId, row.kind, row.paid ?? null, row.currency ?? "NGN", row.deviceHash, row.createdAt],
     );
     return row;
   }
@@ -291,6 +301,28 @@ export class SqlStore {
       ],
     );
     return (await this.getReppo(r.evalId)) ?? r;
+  }
+
+  /**
+   * Feed a completed Reppo score back into the confirmation it scored, once per eval.
+   * Accepted with 85 or more: that confirmation's trust rises 15 percent (capped at 1.2).
+   * Rejected, or under 60: its trust halves, so a weak check counts less in future ranges.
+   */
+  async applyReppoTrust(evalId: string, verdictId: string, score: number | null, decision: string | null): Promise<string> {
+    await this.init();
+    const effect =
+      decision === "reject" || (score != null && score < 60) ? "reduced" : score != null && score >= 85 ? "boosted" : "unchanged";
+    const claimed = await this.db.query<Row>(
+      "update reppo_evals set trust_effect = $2 where eval_id = $1 and trust_effect is null returning eval_id",
+      [evalId, effect],
+    );
+    if (claimed.length === 0) return (await this.getReppo(evalId))?.trustEffect ?? "unchanged";
+    if (effect === "boosted") {
+      await this.db.query("update observations set trust = least(1.2, trust * 1.15) where verdict_id = $1", [verdictId]);
+    } else if (effect === "reduced") {
+      await this.db.query("update observations set trust = greatest(0.05, trust * 0.5) where verdict_id = $1", [verdictId]);
+    }
+    return effect;
   }
 
   async getReppo(evalId: string): Promise<ReppoRecord | undefined> {

@@ -24,3 +24,13 @@ describe("parsePriceFromText on noisy tag reads", () => {
     expect(parsePriceFromText("Golden Penny semovita 900").amount).toBe(900);
   });
 });
+
+describe("parsePriceFromText in other currencies", () => {
+  it("reads dollar, pound, rupee, shilling and real tags", () => {
+    expect(parsePriceFromText("EGGS LARGE 12CT $4.49", "USD")).toMatchObject({ amount: 4.49, currencyGuess: "USD" });
+    expect(parsePriceFromText("Hovis 800g £1.40", "GBP")).toMatchObject({ amount: 1.4, currencyGuess: "GBP" });
+    expect(parsePriceFromText("Petrol ₹111.21 /L", "INR")).toMatchObject({ amount: 111.21, currencyGuess: "INR" });
+    expect(parsePriceFromText("Sugar 1kg KSh 165", "KES")).toMatchObject({ amount: 165, currencyGuess: "KES" });
+    expect(parsePriceFromText("Gasolina R$ 6,49", "BRL")).toMatchObject({ amount: 6.49, currencyGuess: "BRL" });
+  });
+});

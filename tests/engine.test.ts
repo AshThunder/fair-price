@@ -92,7 +92,7 @@ describe("range and verdicts against May 2026 anchors", () => {
     const range = buildRange("tomatoes", "NG-KANO", seed.officialRefs, [], seed.areas, asOf, {
       seedOnly: true,
     });
-    expect(range.fallback).toBe("zone");
+    expect(range.fallback).toBe("region");
     expect(range.mid).toBeCloseTo(1182.39, 1);
     expect(classifyQuote(1400, range)).toBe("high");
     const after = codeVerdict(tomatoes, kano, 1400, seed.officialRefs, demos(), seed.areas, asOf);
@@ -121,8 +121,8 @@ describe("demo confirms move the tomato range", () => {
 
   it("legacy scoreBenchmark still scores a small case list", () => {
     const cases = [
-      { id: "a", itemId: "rice-local", areaId: "NG", quoteNaira: 1905.43, expected: "fair" as const, trueNaira: 1905.43, note: "" },
-      { id: "b", itemId: "rice-local", areaId: "NG", quoteNaira: 3200, expected: "high" as const, trueNaira: 1905.43, note: "" },
+      { id: "a", itemId: "rice-local", areaId: "NG", quote: 1905.43, expected: "fair" as const, trueAmount: 1905.43, note: "" },
+      { id: "b", itemId: "rice-local", areaId: "NG", quote: 3200, expected: "high" as const, trueAmount: 1905.43, note: "" },
     ];
     const r = scoreBenchmark(cases, seed.items, seed.areas, seed.officialRefs, [], asOf, { seedOnly: true });
     expect(r.agreed).toBe(2);
@@ -141,7 +141,7 @@ describe("anti-gaming", () => {
       id: "o1",
       itemId: "rice-local",
       areaId: "NG",
-      priceNaira: 1900,
+      price: 1900, currency: "NGN",
       source: "typed",
       status: "accepted",
       trust: 0.45,
@@ -152,7 +152,7 @@ describe("anti-gaming", () => {
     const again = applyAntiGaming({
       itemId: "rice-local",
       areaId: "NG",
-      priceNaira: 1910,
+      price: 1910,
       deviceHash: "abcd",
       now: new Date("2026-11-12T12:00:00Z"),
       observations: [first],
@@ -167,7 +167,7 @@ describe("anti-gaming", () => {
     const result = applyAntiGaming({
       itemId: "rice-local",
       areaId: "NG",
-      priceNaira: 50_000,
+      price: 50_000,
       deviceHash: "newdev",
       now: asOf,
       observations: [],
@@ -268,19 +268,19 @@ describe("sanitize", () => {
       itemName: "Local short-grained rice",
       areaName: "Nigeria (national)",
       unit: "1 kg",
-      quoteNaira: 1905,
+      quote: 1905,
       mid: 1905,
       low: 1620,
       high: 2190,
       fallback: "national",
       points: [
-        { id: "ref-rice-local-NG", kind: "official", priceNaira: 1905.43, label: "Food Price Watch", period: "2026-05" },
+        { id: "ref-rice-local-NG", kind: "official", price: 1905.43, label: "Food Price Watch", period: "2026-05" },
       ],
       reasons: ["inside-band"],
       verdict: "fair",
       tip: "Confirm the unit before you pay.",
     });
-    expect(pack).toContain("1905.43");
+    expect(pack).toContain("1905 NGN");
     expect(pack).not.toMatch(/@|080\d{8}|GPS coordinates/i);
   });
 });
@@ -299,7 +299,7 @@ describe("device trust", () => {
     const r = applyAntiGaming({
       itemId: "garri-white",
       areaId: "NG-OYO",
-      priceNaira: 820,
+      price: 820,
       deviceHash: deviceHash("trusted"),
       now: asOf,
       observations: [],
@@ -315,7 +315,7 @@ describe("device trust", () => {
     const r = applyAntiGaming({
       itemId: "garri-white",
       areaId: "NG-OYO",
-      priceNaira: 0,
+      price: 0,
       deviceHash: "x",
       now: asOf,
       observations: [],
@@ -334,7 +334,7 @@ describe("stale anchors and fallback", () => {
     const o = codeVerdict(item, oyo, 22000, seed.officialRefs, [], seed.areas, asOf, { seedOnly: true });
     const k = codeVerdict(item, kano, 22000, seed.officialRefs, [], seed.areas, asOf, { seedOnly: true });
     expect(o.range.fallback).toBe("national");
-    expect(k.range.fallback).toBe("zone");
+    expect(k.range.fallback).toBe("region");
     expect(k.range.mid).toBeCloseTo(23276.95, 1);
   });
 
@@ -345,7 +345,7 @@ describe("stale anchors and fallback", () => {
       id: `o${i}`,
       itemId: "pms",
       areaId: "NG-KANO",
-      priceNaira: p,
+      price: p, currency: "NGN",
       source: "typed",
       status: "accepted",
       trust: 0.45,
@@ -364,8 +364,8 @@ describe("stale anchors and fallback", () => {
     const item = seed.items.find((i) => i.id === "barbing")!;
     const abuja = seed.areas.find((a) => a.id === "NG-ABUJA")!;
     const bad: Observation[] = [
-      { id: "q", itemId: "barbing", areaId: "NG-ABUJA", priceNaira: 9000, source: "typed", status: "quarantine", trust: 0.2, deviceHash: "a", createdAt: "2026-11-10T10:00:00Z" },
-      { id: "r", itemId: "barbing", areaId: "NG-ABUJA", priceNaira: 1500, source: "typed", status: "rejected", trust: 0, deviceHash: "b", createdAt: "2026-11-10T10:00:00Z" },
+      { id: "q", itemId: "barbing", areaId: "NG-ABUJA", price: 9000, currency: "NGN", source: "typed", status: "quarantine", trust: 0.2, deviceHash: "a", createdAt: "2026-11-10T10:00:00Z" },
+      { id: "r", itemId: "barbing", areaId: "NG-ABUJA", price: 1500, currency: "NGN", source: "typed", status: "rejected", trust: 0, deviceHash: "b", createdAt: "2026-11-10T10:00:00Z" },
     ];
     const v = codeVerdict(item, abuja, 1500, seed.officialRefs, bad, seed.areas, asOf);
     expect(v.label).toBe("uncertain");

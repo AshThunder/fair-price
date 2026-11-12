@@ -68,7 +68,8 @@ export function MetricsPage({ demo }: { demo: boolean }) {
         <div>
           <h1>Does feedback help?</h1>
           <p className="muted">
-            {b.totalCases} Nigerian price cases with cited reference prices. Scored on a held-out test split the engine was never tuned on
+            {b.totalCases} price cases in {Object.keys(b.byCountry).length} countries, each with a cited reference price. Scored on a held-out
+            test split the engine was never tuned on
           </p>
         </div>
       </section>
@@ -79,7 +80,7 @@ export function MetricsPage({ demo }: { demo: boolean }) {
         </h2>
         <div className="metric-bars">
           <div>
-            <p className="muted small">Official averages only</p>
+            <p className="muted small">Public figures only</p>
             <p className="big-figure">{pct(test.seedOnly.accuracy)}</p>
             <Meter value={test.seedOnly.accuracy} tone="seed" />
             <p className="muted small">
@@ -99,6 +100,45 @@ export function MetricsPage({ demo }: { demo: boolean }) {
           Confirmations are simulated from each reference price, never from the quotes, and pass through the real anti-gaming gate:{" "}
           {b.feedback.accepted} accepted, {b.feedback.quarantined} outliers held, {b.feedback.rejected} duplicates refused, {b.feedback.pairs - b.feedback.coveredPairs} of{" "}
           {b.feedback.pairs} item and area pairs left with no confirmations at all
+        </p>
+      </article>
+
+      <article className="card" aria-labelledby="m-country">
+        <h2 id="m-country" className="section-title">By country</h2>
+        <div className="table-wrap">
+          <table className="metric-table">
+            <thead>
+              <tr>
+                <th scope="col">Country</th>
+                <th scope="col">Cases</th>
+                <th scope="col">Cross-source</th>
+                <th scope="col">Seed only</th>
+                <th scope="col">After</th>
+                <th scope="col">Test after</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(b.byCountry).map(([cc, row]) => (
+                <tr key={cc}>
+                  <th scope="row">
+                    {cc} <span className="muted small">{row.currency}</span>
+                  </th>
+                  <td className="figure">{row.seedOnly.cases}</td>
+                  <td className="figure">{row.crossSource}</td>
+                  <td className="figure">{pct(row.seedOnly.accuracy)}</td>
+                  <td className="figure">{pct(row.afterFeedback.accuracy)}</td>
+                  <td className="figure">
+                    {pct(row.testAfterFeedback.accuracy)} <span className="muted small">of {row.testAfterFeedback.cases}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="muted small">
+          Control cases reuse the same figure the seed holds, so they only test the range maths and are easy. Cross-source cases compare against a
+          different publication or a town with no seed figure. Outside Nigeria most cases are controls or close anchors, so treat those 100%
+          scores as a sanity check, not proof
         </p>
       </article>
 
@@ -136,6 +176,16 @@ export function MetricsPage({ demo }: { demo: boolean }) {
           Each confirmed payment on a live check is sent to the Reppo Eval Router with its evidence. {data.reppo.completed} scored so far, median{" "}
           {data.reppo.medianScore ?? "n/a"}. Capped at {data.reppo.dailyCap} evals a day
         </p>
+        {data.reppo.trustEffects ? (
+          <p className="trust-effects">
+            <span className="tag tag-live">{data.reppo.trustEffects.boosted} boosted</span>
+            <span className="tag tag-demo">{data.reppo.trustEffects.unchanged} unchanged</span>
+            <span className="tag tag-reduced">{data.reppo.trustEffects.reduced} reduced</span>
+            <span className="muted small">
+              Score 85 or more raises that confirmation's trust by 15%. A rejection or a score under 60 halves it
+            </span>
+          </p>
+        ) : null}
         {data.reppo.evals.length === 0 ? (
           <p className="empty-line">No checks scored yet. Confirm a payment on a live check to send the first one</p>
         ) : (
@@ -153,6 +203,7 @@ export function MetricsPage({ demo }: { demo: boolean }) {
                       e.route ? `route ${e.route}` : null,
                       e.latencyMs ? `${Math.round(e.latencyMs / 1000)} s` : null,
                       e.creditsCharged ? `${e.creditsCharged} credits` : null,
+                      e.trustEffect ? `trust ${e.trustEffect}` : null,
                     ]
                       .filter(Boolean)
                       .join(" · ")}

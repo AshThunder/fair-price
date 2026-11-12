@@ -1,28 +1,31 @@
-import { useEffect, useId, useState, type FormEvent } from "react";
-import { api, CATEGORY_LABEL, type Catalog, type PublicVerdict } from "../api";
+import { useEffect, useId, useMemo, useState, type FormEvent } from "react";
+import { api, money, type Catalog, type PublicVerdict } from "../api";
+import { countryOf, currencySymbol, itemLabel, itemUnitFor } from "../catalog";
 import { getDeviceId } from "../device";
 import { readPriceFromPhoto } from "../ocr";
+import { slug } from "../../shared/geo";
 
 export interface Preset {
+  country: string;
   itemId: string;
-  areaId: string;
+  place: string;
   quote: number;
   nonce: number;
 }
 
-const AREA_GROUPS: Array<{ kind: string; label: string }> = [
-  { kind: "state", label: "States" },
-  { kind: "zone", label: "Zones" },
-  { kind: "national", label: "Whole country" },
-];
-
 export function CheckForm({
+  catalog,
+  country,
+  onCountry,
   demo,
   preset,
   onResult,
   onBusy,
   onError,
 }: {
+  catalog: Catalog;
+  country: string;
+  onCountry: (code: string) => void;
   demo: boolean;
   preset: Preset | null;
   onResult: (v: PublicVerdict) => void;
@@ -30,31 +33,52 @@ export function CheckForm({
   onError: (message: string | null) => void;
 }) {
   const ids = useId();
-  const [catalog, setCatalog] = useState<Catalog | null>(null);
-  const [catalogError, setCatalogError] = useState<string | null>(null);
-  const [itemId, setItemId] = useState("rice-local");
-  const [areaId, setAreaId] = useState("NG-KANO");
+  const info = countryOf(catalog, country);
+  const [itemText, setItemText] = useState("");
+  const [unit, setUnit] = useState(info.unitOptions[0] ?? "1 item");
+  const [place, setPlace] = useState("");
   const [quote, setQuote] = useState("");
   const [source, setSource] = useState<"typed" | "photo-confirmed">("typed");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [ocrNote, setOcrNote] = useState<string | null>(null);
-  const [fieldError, setFieldError] = useState<string | null>(null);
+  const [fieldError, setFieldError] = useState<{ field: "item" | "quote"; text: string } | null>(null);
   const [reading, setReading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  function loadCatalog() {
-    setCatalogError(null);
-    api.catalog().then(setCatalog).catch((err: Error) => setCatalogError(err.message));
-  }
-  useEffect(loadCatalog, []);
+  // Items and places with data in this country come first in the suggestions.
+  const suggestions = useMemo(() => {
+    const local = catalog.items.filter((i) => i.countries?.includes(country) || (country === "NG" && !i.countries?.length));
+    return local.map((i) => ({ id: i.id, label: itemLabel(i, country), unit: itemUnitFor(i, country) }));
+  }, [catalog, country]);
+  const places = useMemo(() => {
+    // Cities and states first, broad regions (such as Nigeria's zones) last.
+    const inCountry = catalog.areas.filter((a) => a.country === country && a.kind !== "country");
+    const broad = (a: (typeof inCountry)[number]) => a.kind === "region" && a.parentId === country && inCountry.some((b) => b.parentId === a.id);
+    return [...inCountry.filter((a) => !broad(a)), ...inCountry.filter(broad)].map((a) => a.name);
+  }, [catalog, country]);
+  // Same matching as the server: a catalog name, this country's name, or an alias.
+  const matched = useMemo(() => {
+    const key = slug(itemText);
+    if (!key) return undefined;
+    const item = catalog.items.find(
+      (i) => slug(i.name) === key || (i.names?.[country] && slug(i.names[country]) === key) || (i.aliases ?? []).some((a) => slug(a) === key),
+    );
+    return item ? { id: item.id, label: itemLabel(item, country), unit: itemUnitFor(item, country) } : undefined;
+  }, [catalog, country, itemText]);
+  const symbol = currencySymbol(info.currency, info.locale);
+
+  useEffect(() => {
+    setUnit(info.unitOptions[0] ?? "1 item");
+  }, [info.code]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!preset) return;
-    setItemId(preset.itemId);
-    setAreaId(preset.areaId);
+    const item = catalog.items.find((i) => i.id === preset.itemId);
+    if (item) setItemText(itemLabel(item, preset.country));
+    setPlace(preset.place);
     setQuote(String(preset.quote));
     setSource("typed");
-    void run(preset.itemId, preset.areaId, preset.quote, "typed");
+    void run({ country: preset.country, itemId: preset.itemId, place: preset.place, quote: preset.quote, source: "typed" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preset?.nonce]);
 
@@ -66,10 +90,15 @@ export function CheckForm({
     setReading(true);
     setOcrNote("Reading the price from your photo");
     try {
-      const hint = await readPriceFromPhoto(file);
+      const hint = await readPriceFromPhoto(file, info.currency);
       if (hint.amount) {
-        setQuote(String(Math.round(hint.amount)));
-        setOcrNote(`Read ₦${Math.round(hint.amount).toLocaleString("en-NG")} from the photo. Check the number before you continue.`);
+        setQuote(String(hint.amount));
+        const other = hint.currencyGuess !== "unknown" && hint.currencyGuess !== info.currency;
+        setOcrNote(
+          other
+            ? `Read ${hint.amount} with a ${hint.currencyGuess} mark, but prices here are in ${info.currency}. Check the number and the country.`
+            : `Read ${money(hint.amount, info.currency, info.locale)} from the photo. Check the number before you continue.`,
+        );
       } else {
         setOcrNote("No price could be read from that photo. Type the amount you can see.");
       }
@@ -80,12 +109,12 @@ export function CheckForm({
     }
   }
 
-  async function run(item: string, area: string, amount: number, src: "typed" | "photo-confirmed") {
+  async function run(input: { country: string; itemId?: string; itemText?: string; unit?: string; place: string; quote: number; source: "typed" | "photo-confirmed" }) {
     setSubmitting(true);
     onBusy(true);
     onError(null);
     try {
-      const { verdict } = await api.check({ itemId: item, areaId: area, quoteNaira: amount, deviceId: getDeviceId(), demo, source: src });
+      const { verdict } = await api.check({ ...input, place: input.place.trim() || undefined, deviceId: getDeviceId(), demo });
       onResult(verdict);
     } catch (err) {
       onError(err instanceof Error ? err.message : "The check could not be completed.");
@@ -95,97 +124,140 @@ export function CheckForm({
     }
   }
 
+  function parseAmount(text: string): number {
+    // Accept 1,900 / 1.900 / 6,49 / 4.49: a separator followed by exactly 3 digits is thousands.
+    const t = text.replace(/[^\d.,]/g, "");
+    const normal = t.replace(/[.,](?=\d{3}(?:\D|$))/g, "").replace(",", ".");
+    return Number(normal);
+  }
+
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    const amount = Number(quote.replace(/[,\s₦]/g, ""));
+    if (itemText.trim().length < 2) {
+      setFieldError({ field: "item", text: "Type what you are buying, for example eggs or a taxi ride" });
+      return;
+    }
+    const amount = parseAmount(quote);
     if (!Number.isFinite(amount) || amount <= 0) {
-      setFieldError("Type the price you were quoted, in naira, for example 1900");
+      setFieldError({ field: "quote", text: `Type the price you were quoted, in ${info.currency}` });
       return;
     }
     setFieldError(null);
-    void run(itemId, areaId, amount, source);
-  }
-
-  if (catalogError) {
-    return (
-      <div className="card state-card" role="alert">
-        <p className="state-title">The price list did not load</p>
-        <p className="muted">{catalogError}</p>
-        <button type="button" className="btn btn-ghost" onClick={loadCatalog}>Try again</button>
-      </div>
+    void run(
+      matched
+        ? { country, itemId: matched.id, place, quote: amount, source }
+        : { country, itemText: itemText.trim(), unit, place, quote: amount, source },
     );
   }
 
-  if (!catalog) {
-    return (
-      <div className="card form-grid" aria-busy="true" aria-label="Loading the price list">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="skeleton-field">
-            <span className="skeleton skeleton-label" />
-            <span className="skeleton skeleton-input" />
-          </div>
-        ))}
-        <span className="skeleton skeleton-button" />
-      </div>
-    );
-  }
-
-  const categories = [...new Set(catalog.items.map((i) => i.category))];
-  const unit = catalog.items.find((i) => i.id === itemId)?.unit;
+  const seeded = catalog.countries.filter((c) => c.seeded);
+  const rest = catalog.countries.filter((c) => !c.seeded);
 
   return (
-    <form className="card form-grid" onSubmit={onSubmit} noValidate>
+    <form className="card form-grid check-form" onSubmit={onSubmit} noValidate>
+      <div className="field">
+        <label htmlFor={`${ids}-country`}>Country</label>
+        <select id={`${ids}-country`} value={country} onChange={(e) => onCountry(e.target.value)}>
+          <optgroup label="With starter prices">
+            {seeded.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.name} ({c.currency})
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label="Everywhere else">
+            {rest.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.name} ({c.currency})
+              </option>
+            ))}
+          </optgroup>
+        </select>
+      </div>
+
       <div className="field">
         <label htmlFor={`${ids}-item`}>What are you buying</label>
-        <select id={`${ids}-item`} value={itemId} onChange={(e) => setItemId(e.target.value)}>
-          {categories.map((cat) => (
-            <optgroup key={cat} label={CATEGORY_LABEL[cat] ?? cat}>
-              {catalog.items
-                .filter((i) => i.category === cat)
-                .map((i) => (
-                  <option key={i.id} value={i.id}>
-                    {i.name}
-                  </option>
-                ))}
-            </optgroup>
+        <input
+          id={`${ids}-item`}
+          className={`text-input${fieldError?.field === "item" ? " invalid" : ""}`}
+          list={`${ids}-items`}
+          value={itemText}
+          autoComplete="off"
+          maxLength={60}
+          placeholder="Eggs, petrol, a haircut, anything"
+          aria-invalid={fieldError?.field === "item"}
+          onChange={(e) => setItemText(e.target.value)}
+        />
+        <datalist id={`${ids}-items`}>
+          {suggestions.map((s) => (
+            <option key={s.id} value={s.label} />
           ))}
-        </select>
+        </datalist>
+        {fieldError?.field === "item" ? (
+          <p className="field-error" role="alert">
+            {fieldError.text}
+          </p>
+        ) : null}
       </div>
-      <div className="field">
-        <label htmlFor={`${ids}-area`}>Where</label>
-        <select id={`${ids}-area`} value={areaId} onChange={(e) => setAreaId(e.target.value)}>
-          {AREA_GROUPS.map((g) => (
-            <optgroup key={g.kind} label={g.label}>
-              {catalog.areas
-                .filter((a) => a.kind === g.kind)
-                .map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))}
-            </optgroup>
-          ))}
-        </select>
+
+      <div className="field-pair">
+        <div className="field">
+          <label htmlFor={`${ids}-place`}>Where</label>
+          <input
+            id={`${ids}-place`}
+            className="text-input"
+            list={`${ids}-places`}
+            value={place}
+            autoComplete="off"
+            maxLength={60}
+            placeholder={places[0] ? `e.g. ${places[0]}` : "Town or city"}
+            onChange={(e) => setPlace(e.target.value)}
+          />
+          <datalist id={`${ids}-places`}>
+            {places.map((p) => (
+              <option key={p} value={p} />
+            ))}
+          </datalist>
+        </div>
+        <div className="field">
+          <label htmlFor={`${ids}-unit`}>Per</label>
+          {matched ? (
+            <p className="unit-fixed" id={`${ids}-unit`}>
+              {matched.unit}
+            </p>
+          ) : (
+            <select id={`${ids}-unit`} value={unit} onChange={(e) => setUnit(e.target.value)}>
+              {info.unitOptions.map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
       </div>
+
       <div className="field">
         <label htmlFor={`${ids}-quote`}>Price you were quoted</label>
-        <div className={`money-input${fieldError ? " invalid" : ""}`}>
-          <span aria-hidden="true">₦</span>
+        <div className={`money-input${fieldError?.field === "quote" ? " invalid" : ""}`}>
+          <span aria-hidden="true">{symbol}</span>
           <input
             id={`${ids}-quote`}
-            inputMode="numeric"
+            inputMode="decimal"
             autoComplete="off"
             value={quote}
-            aria-invalid={Boolean(fieldError)}
-            aria-describedby={`${ids}-unit${fieldError ? ` ${ids}-err` : ""}`}
+            aria-invalid={fieldError?.field === "quote"}
+            aria-describedby={`${ids}-cur${fieldError?.field === "quote" ? ` ${ids}-err` : ""}`}
             onChange={(e) => setQuote(e.target.value)}
-            placeholder="1900"
+            placeholder={info.currency === "NGN" ? "1900" : "4.50"}
           />
         </div>
-        <p className="field-hint" id={`${ids}-unit`}>Per {unit}</p>
-        {fieldError ? (
+        <p className="field-hint" id={`${ids}-cur`}>
+          In {info.currency}. Fair Price never converts currencies
+        </p>
+        {fieldError?.field === "quote" ? (
           <p className="field-error" id={`${ids}-err`} role="alert">
-            {fieldError}
+            {fieldError.text}
           </p>
         ) : null}
       </div>

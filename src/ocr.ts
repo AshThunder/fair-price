@@ -36,8 +36,8 @@ async function prepare(file: File): Promise<HTMLCanvasElement> {
   return canvas;
 }
 
-/** Read a price from a photo of a tag. Two layout passes; the parser prefers amounts with a naira mark. */
-export async function readPriceFromPhoto(file: File): Promise<PriceHint> {
+/** Read a price from a photo of a tag. Two layout passes; the parser prefers amounts with a currency mark. */
+export async function readPriceFromPhoto(file: File, currency = "NGN"): Promise<PriceHint> {
   const Tesseract = (await import("tesseract.js")).default;
   const worker = await Tesseract.createWorker("eng");
   try {
@@ -52,10 +52,10 @@ export async function readPriceFromPhoto(file: File): Promise<PriceHint> {
       await worker.setParameters({ tessedit_pageseg_mode: psm as Tesseract.PSM });
       const { data } = await worker.recognize(source);
       texts.push(data.text ?? "");
-      const hint = parsePriceFromText(texts.join("\n"));
-      if (hint.amount && hint.currencyGuess === "NGN") return hint;
+      const hint = parsePriceFromText(texts.join("\n"), currency);
+      if (hint.amount && hint.currencyGuess === currency) return hint;
     }
-    return parsePriceFromText(texts.join("\n"));
+    return parsePriceFromText(texts.join("\n"), currency);
   } finally {
     await worker.terminate();
   }

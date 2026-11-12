@@ -10,37 +10,42 @@ export function sanitizeForEval(text: string): string {
 export function evidencePackText(input: {
   itemName: string;
   areaName: string;
+  /** ISO 4217 code; every amount in the pack is in this currency. */
+  currency?: string;
   unit: string;
-  quoteNaira: number;
+  quote: number;
   mid: number | null;
   low: number | null;
   high: number | null;
   fallback: string;
-  points: Array<{ id: string; kind: string; priceNaira: number; label: string; period?: string }>;
+  points: Array<{ id: string; kind: string; price: number; label: string; period?: string }>;
   reasons: string[];
   verdict: string;
   tip: string;
   /** What the buyer reported paying after the check, if they confirmed. */
-  paidNaira?: number | null;
+  paid?: number | null;
 }): string {
+  const cur = input.currency ?? "NGN";
+  const amt = (n: number | null) => (n == null ? "none" : `${Math.abs(n) >= 100 ? Math.round(n) : Math.round(n * 100) / 100} ${cur}`);
   const lines = [
     `Fair Price judgment pack (sanitized, no names, phones, photos, or exact GPS).`,
     `Item: ${input.itemName} per ${input.unit}.`,
     `Area: ${input.areaName}.`,
-    `Quoted price: ${input.quoteNaira} naira.`,
-    `Code range: mid ${input.mid ?? "none"}, low ${input.low ?? "none"}, high ${input.high ?? "none"}, fallback ${input.fallback}.`,
+    `Currency: ${cur}. All amounts below are in ${cur}.`,
+    `Quoted price: ${amt(input.quote)}.`,
+    `Code range: mid ${amt(input.mid)}, low ${amt(input.low)}, high ${amt(input.high)}, fallback ${input.fallback}.`,
     `Verdict: ${input.verdict}.`,
     `Reasons: ${input.reasons.join("; ") || "none"}.`,
     `Negotiation tip: ${input.tip}`,
   ];
-  if (input.paidNaira != null) {
+  if (input.paid != null) {
     lines.push(
-      `Outcome: the buyer later confirmed paying ${input.paidNaira} naira. Judge whether the verdict, range, and tip were accurate and useful given the evidence and this outcome.`,
+      `Outcome: the buyer later confirmed paying ${amt(input.paid)}. Judge whether the verdict, range, and tip were accurate and useful given the evidence and this outcome.`,
     );
   }
   lines.push(`Evidence:`);
   for (const p of input.points) {
-    lines.push(`- ${p.id} ${p.kind} ${p.priceNaira} naira (${p.label}${p.period ? ", " + p.period : ""})`);
+    lines.push(`- ${p.id} ${p.kind} ${amt(p.price)} (${p.label}${p.period ? ", " + p.period : ""})`);
   }
   return sanitizeForEval(lines.join("\n"));
 }

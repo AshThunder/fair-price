@@ -19,7 +19,7 @@ console.log("health", JSON.stringify(health.body));
 
 const check = await call<V>("/api/check", {
   method: "POST",
-  body: JSON.stringify({ itemId, areaId, quoteNaira: Number(quote), deviceId, demo: false, source: "typed" }),
+  body: JSON.stringify({ itemId, areaId, quote: Number(quote), deviceId, demo: false, source: "typed" }),
 });
 if (check.status !== 200) throw new Error(`check failed ${check.status} ${JSON.stringify(check.body)}`);
 const v = check.body.verdict;
@@ -27,7 +27,7 @@ console.log("check", check.ms, "ms", v.label, v.low, v.mid, v.high, "serv:", v.s
 
 const fb = await call<Record<string, any>>("/api/feedback", {
   method: "POST",
-  body: JSON.stringify({ verdictId: v.id, kind: "paid", paidNaira: Number(paid), deviceId, demo: false }),
+  body: JSON.stringify({ verdictId: v.id, kind: "paid", paid: Number(paid), deviceId, demo: false }),
 });
 console.log("feedback", fb.status, JSON.stringify(fb.body));
 
@@ -44,7 +44,7 @@ const stored = evalId ? (await call<Record<string, any>>(`/api/reppo/${evalId}`)
 
 const report = {
   ranAt: new Date().toISOString(),
-  input: { itemId, areaId, quoteNaira: Number(quote), paidNaira: Number(paid) },
+  input: { itemId, areaId, quote: Number(quote), paid: Number(paid) },
   health: health.body,
   check: {
     httpMs: check.ms,

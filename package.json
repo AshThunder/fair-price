@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Fair Price \u2014 Nigeria-first fair-price checks for everyday goods, fares, repairs, and rent.",
+  "description": "Fair Price: a fair price check for anything, anywhere.",
   "scripts": {
     "dev": "concurrently -k -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "tsx watch server/index.ts",

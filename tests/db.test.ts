@@ -16,12 +16,14 @@ function verdict(id: string): StoredVerdict {
     id,
     itemId: "rice-local",
     areaId: "NG",
-    quoteNaira: 1900,
+    quote: 1900,
+    currency: "NGN",
+    country: "NG",
     unit: "1 kg",
     code: {
       label: "fair",
       reasonCodes: ["inside-band"],
-      range: { mid: 1905, low: 1620, high: 2191, sampleSize: 1, officialCount: 1, observationCount: 0, thin: true, fallback: "national", points: [], method: "test" },
+      range: { mid: 1905, low: 1620, high: 2191, sampleSize: 1, officialCount: 1, observationCount: 0, thin: true, fallback: "national", points: [], method: "test", currency: "NGN" },
     },
     serv: null,
     final: "fair",
@@ -36,7 +38,7 @@ function verdict(id: string): StoredVerdict {
 
 describe("SqlStore on PGlite", () => {
   it("runs migrations once and records them", async () => {
-    expect(await store.appliedMigrations()).toEqual(["001_init"]);
+    expect(await store.appliedMigrations()).toEqual(["001_init", "002_global_currency"]);
     await store.init();
     expect(store.kind).toBe("pglite");
     expect(store.durable).toBe(false);
@@ -54,19 +56,19 @@ describe("SqlStore on PGlite", () => {
   });
 
   it("stores observations and filters by item", async () => {
-    await store.addObservation({ itemId: "pms", areaId: "NG-KANO", priceNaira: 1420, source: "typed", status: "accepted", trust: 0.45, deviceHash: "d1", tag: "live" });
-    await store.addObservation({ itemId: "yam", areaId: "NG-KANO", priceNaira: 2300, source: "typed", status: "quarantine", trust: 0.2, deviceHash: "d2", tag: "live", note: "outlier" });
+    await store.addObservation({ itemId: "pms", areaId: "NG-KANO", price: 1420, currency: "NGN", source: "typed", status: "accepted", trust: 0.45, deviceHash: "d1", tag: "live" });
+    await store.addObservation({ itemId: "yam", areaId: "NG-KANO", price: 2300, currency: "NGN", source: "typed", status: "quarantine", trust: 0.2, deviceHash: "d2", tag: "live", note: "outlier" });
     const pms = await store.listObservations({ itemId: "pms" });
     expect(pms).toHaveLength(1);
-    expect(pms[0].priceNaira).toBe(1420);
+    expect(pms[0].price).toBe(1420);
     expect(typeof pms[0].createdAt).toBe("string");
     expect((await store.listObservations()).length).toBe(2);
   });
 
   it("stores feedback linked to a verdict", async () => {
-    await store.addFeedback({ verdictId: "v-1", kind: "paid", paidNaira: 1850, deviceHash: "d1" });
+    await store.addFeedback({ verdictId: "v-1", kind: "paid", paid: 1850, currency: "NGN", deviceHash: "d1" });
     const all = await store.listFeedback();
-    expect(all[0].paidNaira).toBe(1850);
+    expect(all[0].paid).toBe(1850);
   });
 
   it("claims the 24-hour device slot atomically", async () => {
@@ -118,7 +120,7 @@ describe("store selection", () => {
     await a.close();
     const b = await createStore({ pgliteDir: dir });
     expect((await b.getVerdict("v-persist"))?.id).toBe("v-persist");
-    expect(await b.appliedMigrations()).toEqual(["001_init"]);
+    expect(await b.appliedMigrations()).toEqual(["001_init", "002_global_currency"]);
     await b.close();
   });
 });

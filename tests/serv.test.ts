@@ -57,11 +57,11 @@ describe("/api/check when SERV disagrees with the band", () => {
     const res = await app.request("/api/check", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ itemId: "tomatoes", areaId: "NG-KANO", quoteNaira: 2500, deviceId: "t-serv-disagree", demo: false }),
+      body: JSON.stringify({ itemId: "tomatoes", areaId: "NG-KANO", quote: 2500, deviceId: "t-serv-disagree", demo: false }),
     });
     const { verdict } = (await res.json()) as { verdict: Record<string, any> };
     expect(verdict.label).toBe("high");
-    expect(verdict.quoteNaira).toBeGreaterThan(verdict.high);
+    expect(verdict.quote).toBeGreaterThan(verdict.high);
     expect(verdict.reasons.join(" ")).not.toMatch(/perfectly fair/);
     expect(verdict.tip).not.toBe("Pay it.");
     expect(verdict.note).toMatch(/monthly average/);
@@ -76,7 +76,7 @@ describe("/api/check when SERV disagrees with the band", () => {
     const res = await app.request("/api/check", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ itemId: "tomatoes", areaId: "NG-KANO", quoteNaira: 2500, deviceId: "t-serv-agree", demo: false }),
+      body: JSON.stringify({ itemId: "tomatoes", areaId: "NG-KANO", quote: 2500, deviceId: "t-serv-agree", demo: false }),
     });
     const { verdict } = (await res.json()) as { verdict: Record<string, any> };
     expect(verdict.label).toBe("high");

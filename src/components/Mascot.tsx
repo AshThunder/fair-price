@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 export type MascotMood = "idle" | "think" | "fair" | "high" | "low" | "uncertain";
 
 export const mascotCaptions: Record<MascotMood, string> = {
-  idle: "Tell me the price. I go check am",
-  think: "Hold on, I'm checking the stall book",
+  idle: "Tell me the price. I'll check it",
+  think: "Hold on, I'm checking the price book",
   fair: "Fair price. You can buy",
   high: "Ah, this one is too much",
   low: "So cheap? Check the measure first",

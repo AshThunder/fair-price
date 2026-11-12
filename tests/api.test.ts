@@ -13,8 +13,8 @@ describe("API", () => {
       items: unknown[];
       areas: unknown[];
     };
-    expect(catalog.items.length).toBe(16);
-    expect(catalog.areas.length).toBe(14);
+    expect(catalog.items.length).toBe(22);
+    expect(catalog.areas.length).toBe(37);
   });
 
   it("returns a demo verdict for national rice at the official average", async () => {
@@ -24,7 +24,7 @@ describe("API", () => {
       body: JSON.stringify({
         itemId: "rice-local",
         areaId: "NG",
-        quoteNaira: 1905.43,
+        quote: 1905.43,
         deviceId: "test-device-rice",
         demo: true,
       }),
@@ -43,7 +43,7 @@ describe("API", () => {
       body: JSON.stringify({
         itemId: "tomatoes",
         areaId: "NG-KANO",
-        quoteNaira: 1400,
+        quote: 1400,
         deviceId: "test-device-tomatoes",
         demo: true,
       }),
@@ -60,7 +60,7 @@ describe("API", () => {
       body: JSON.stringify({
         itemId: "garri-white",
         areaId: "NG-OYO",
-        quoteNaira: 800,
+        quote: 800,
         deviceId,
         demo: true,
       }),
@@ -72,7 +72,7 @@ describe("API", () => {
       body: JSON.stringify({
         verdictId: verdict.verdict.id,
         kind: "paid",
-        paidNaira: 800,
+        paid: 800,
         deviceId,
         demo: true,
       }),
@@ -86,7 +86,7 @@ describe("API", () => {
       body: JSON.stringify({
         itemId: "garri-white",
         areaId: "NG-OYO",
-        quoteNaira: 810,
+        quote: 810,
         deviceId,
         demo: true,
       }),
@@ -98,7 +98,7 @@ describe("API", () => {
       body: JSON.stringify({
         verdictId: v2.verdict.id,
         kind: "paid",
-        paidNaira: 810,
+        paid: 810,
         deviceId,
         demo: true,
       }),
@@ -141,7 +141,7 @@ describe("API", () => {
     const res = await app.request("/api/check", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ itemId: "rice-local", areaId: "NG", quoteNaira: 1905.43, deviceId: "badge", demo: true }),
+      body: JSON.stringify({ itemId: "rice-local", areaId: "NG", quote: 1905.43, deviceId: "badge", demo: true }),
     });
     const body = (await json(res)) as { verdict: { reppo: { state: string; score: number; evalId: string } } };
     expect(body.verdict.reppo.state).toBe("checked");
@@ -152,13 +152,13 @@ describe("API", () => {
     const bad = await app.request("/api/check", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ itemId: "rice-local", areaId: "NG", quoteNaira: 1e12, demo: true }),
+      body: JSON.stringify({ itemId: "rice-local", areaId: "NG", quote: 1e12, demo: true }),
     });
     expect(bad.status).toBe(400);
     const unknown = await app.request("/api/check", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ itemId: "caviar", areaId: "NG", quoteNaira: 100, demo: true }),
+      body: JSON.stringify({ itemId: "caviar", areaId: "NG", quote: 100, demo: true }),
     });
     expect(unknown.status).toBe(400);
   });
@@ -169,17 +169,17 @@ describe("API", () => {
       await app.request("/api/check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemId: "barbing", areaId: "NG-BAUCHI", quoteNaira: 1000, deviceId, demo: true }),
+        body: JSON.stringify({ itemId: "barbing", areaId: "NG-BAUCHI", quote: 1000, deviceId, demo: true }),
       }),
     )) as { verdict: { id: string; label: string } };
     expect(check.verdict.label).toBe("uncertain");
     await app.request("/api/feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ verdictId: check.verdict.id, kind: "paid", paidNaira: 1000, deviceId, demo: true }),
+      body: JSON.stringify({ verdictId: check.verdict.id, kind: "paid", paid: 1000, deviceId, demo: true }),
     });
     const liveBoard = (await json(await app.request("/api/board?areaId=NG-BAUCHI&demo=0"))) as { rows: Array<{ itemId: string; observationCount: number }> };
-    expect(liveBoard.rows.find((r) => r.itemId === "barbing")?.observationCount).toBe(0);
+    expect(liveBoard.rows.find((r) => r.itemId === "barbing")?.observationCount ?? 0).toBe(0);
     const demoBoard = (await json(await app.request("/api/board?areaId=NG-BAUCHI&demo=1"))) as { rows: Array<{ itemId: string; observationCount: number }> };
     expect(demoBoard.rows.find((r) => r.itemId === "barbing")?.observationCount).toBe(1);
   });

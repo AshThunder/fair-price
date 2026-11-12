@@ -45,7 +45,8 @@ async function say(text: string) {
 console.log("live SERV configured:", hasServ());
 await say("/start");
 await say("/check");
-await say("Fresh tomatoes");
-await say("Kano");
-await say("₦1,600");
+await say("Kenya");
+await say("Petrol");
+await say("Nairobi");
+await say("260");
 await say("/metrics");

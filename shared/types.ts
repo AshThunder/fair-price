@@ -1,30 +1,49 @@
 export type VerdictLabel = "fair" | "high" | "low" | "uncertain";
 
-export type AreaKind = "national" | "zone" | "state";
+/** country > region (state, province, zone) > city. Areas never cross a country. */
+export type AreaKind = "country" | "region" | "city";
+
+export type Category = "food" | "fuel" | "transport" | "repair" | "rent" | "service" | "other";
 
 export interface Item {
   id: string;
+  /** Default display name. */
   name: string;
+  /** Default unit, metric. */
   unit: string;
-  category: "food" | "fuel" | "transport" | "repair" | "rent" | "service";
-  nbsLabel: string | null;
+  category: Category;
+  /** Per-country names, e.g. { US: "Gasoline (regular)" }. */
+  names?: Record<string, string>;
+  /** Per-country units, e.g. { US: "1 US gallon" }. Prices in a country always use its unit. */
+  units?: Record<string, string>;
+  /** Extra words people type for this item. */
+  aliases?: string[];
+  /** Set for free-text items that are not in the catalog. */
+  custom?: boolean;
+  nbsLabel?: string | null;
 }
 
 export interface Area {
   id: string;
   name: string;
   kind: AreaKind;
-  state: string | null;
-  zone: string | null;
+  /** ISO 3166-1 alpha-2. */
   country: string;
+  /** ISO 4217. Every price in this area is in this currency. */
+  currency: string;
+  parentId: string | null;
+  aliases?: string[];
+  /** Set for free-text places that are not in the seed. */
+  custom?: boolean;
 }
 
 export interface OfficialRef {
   id: string;
   itemId: string;
   areaId: string;
-  priceNaira: number;
-  grain: "national" | "zone" | "state";
+  price: number;
+  currency: string;
+  grain: AreaKind;
   period: string;
   source: string;
   series: string;
@@ -38,7 +57,11 @@ export interface Observation {
   id: string;
   itemId: string;
   areaId: string;
-  priceNaira: number;
+  price: number;
+  currency: string;
+  unit?: string;
+  itemName?: string;
+  verdictId?: string;
   source: "typed" | "photo-confirmed" | "demo-seed" | "telegram";
   status: "pending" | "accepted" | "rejected" | "quarantine";
   trust: number;
@@ -52,13 +75,17 @@ export interface BenchmarkCase {
   id: string;
   itemId: string;
   areaId: string;
-  quoteNaira: number;
+  quote: number;
+  currency?: string;
+  country?: string;
   expected: VerdictLabel;
-  trueNaira: number | null;
+  trueAmount: number | null;
   note: string;
   split?: "dev" | "test";
   truthSource?: string;
   category?: Item["category"];
+  /** "control" when the truth is the same figure as the seed anchor. */
+  kind?: "cross-source" | "control";
 }
 
 export interface BenchmarkSource {
@@ -76,14 +103,23 @@ export interface BenchmarkFile {
   method: string[];
   labelRule: string;
   sources: BenchmarkSource[];
-  truths: Array<{ itemId: string; areaId: string; truthNaira: number; source: string; reasoning: string }>;
+  truths: Array<{ itemId: string; areaId: string; truthAmount: number; source: string; reasoning: string; currency?: string }>;
   cases: BenchmarkCase[];
 }
 
-export interface SeedFile {
+export interface CountryInfo {
+  code: string;
+  name: string;
   currency: string;
-  country: string;
+  locale: string;
+  /** "imperial" uses lb and US gallons for new items; "metric" uses kg and litres. */
+  units: "metric" | "imperial";
+  seeded: boolean;
+}
+
+export interface SeedFile {
   generated: string;
+  countries: CountryInfo[];
   disclaimer: string;
   items: Item[];
   areas: Area[];
@@ -95,7 +131,7 @@ export interface SeedFile {
 export interface EvidencePoint {
   id: string;
   kind: "official" | "observation";
-  priceNaira: number;
+  price: number;
   weight: number;
   label: string;
   period?: string;
@@ -111,7 +147,8 @@ export interface RangeResult {
   officialCount: number;
   observationCount: number;
   thin: boolean;
-  fallback: "local" | "zone" | "national" | "none";
+  fallback: "local" | "region" | "national" | "none";
+  currency: string;
   points: EvidencePoint[];
   method: string;
 }
@@ -140,8 +177,14 @@ export interface StoredVerdict {
   id: string;
   itemId: string;
   areaId: string;
-  quoteNaira: number;
+  quote: number;
+  currency: string;
+  country: string;
   unit: string;
+  itemName?: string;
+  areaName?: string;
+  /** SERV's rough range when there is no local data. Shown as a guess, never used as the band. */
+  guess?: { low: number; high: number } | null;
   code: CodeVerdict;
   serv: ServJudgment | null;
   servError?: string;
@@ -166,7 +209,8 @@ export interface FeedbackRecord {
   id: string;
   verdictId: string;
   kind: "paid" | "fair" | "not-fair";
-  paidNaira?: number;
+  paid?: number;
+  currency?: string;
   createdAt: string;
   deviceHash: string;
 }
@@ -185,6 +229,8 @@ export interface ReppoRecord {
   createdAt: string;
   completedAt?: string;
   lastPolledAt?: string;
+  /** How this score changed the trust of the confirmation it scored. */
+  trustEffect?: string | null;
 }
 
 export interface MetricSnapshot {

@@ -4,6 +4,7 @@ import {
   deviceHash,
   mape,
 } from "./engine.js";
+import { areaFromId } from "./geo.js";
 import type { Area, BenchmarkCase, BenchmarkFile, Item, Observation, OfficialRef, VerdictLabel } from "./types.js";
 
 /** Deterministic PRNG so every run of the benchmark sees the same feedback stream. */
@@ -46,7 +47,9 @@ export const DEFAULT_FEEDBACK_SIM: FeedbackSimOptions = {
   duplicateRate: 0.3,
 };
 
-function roundLikeTrader(n: number): number {
+function roundLikeTrader(n: number, currency = "NGN"): number {
+  // Other currencies: keep three significant figures, so $4.48 or ₹102 stay realistic.
+  if (currency !== "NGN") return Number(n.toPrecision(3));
   if (n < 2000) return Math.round(n / 10) * 10;
   if (n < 20000) return Math.round(n / 50) * 50;
   return Math.round(n / 250) * 250;
@@ -74,13 +77,13 @@ export function simulateFeedback(
   let clock = asOf.getTime() - 14 * 24 * 3600_000;
   let deviceCounter = 0;
 
-  const submit = (itemId: string, areaId: string, price: number, device: string) => {
+  const submit = (itemId: string, areaId: string, price: number, device: string, currency: string) => {
     clock += 3 * 3600_000;
     const now = new Date(clock);
     const gate = applyAntiGaming({
       itemId,
       areaId,
-      priceNaira: price,
+      price: price,
       deviceHash: device,
       now,
       observations,
@@ -95,7 +98,8 @@ export function simulateFeedback(
       id: `sim-${observations.length + 1}`,
       itemId,
       areaId,
-      priceNaira: price,
+      price: price,
+      currency,
       source: "typed",
       status: gate.status,
       trust: gate.trust,
@@ -108,6 +112,7 @@ export function simulateFeedback(
 
   for (const t of bench.truths) {
     if (rand() >= opts.coverage) continue;
+    const cur = t.currency ?? areaFromId(areas, t.areaId)?.currency ?? "NGN";
     stats.coveredPairs += 1;
     const n = opts.minConfirms + Math.floor(rand() * (opts.maxConfirms - opts.minConfirms + 1));
     const devices: string[] = [];
@@ -115,14 +120,14 @@ export function simulateFeedback(
       const device = deviceHash(`sim-device-${++deviceCounter}`);
       devices.push(device);
       const u = (rand() * 2 - 1) * opts.scatter;
-      submit(t.itemId, t.areaId, roundLikeTrader(t.truthNaira * (1 + opts.bias + u)), device);
+      submit(t.itemId, t.areaId, roundLikeTrader(t.truthAmount * (1 + opts.bias + u), cur), device, cur);
     }
     if (rand() < opts.duplicateRate) {
       // Same device, same pair, within the window: must be rejected.
-      submit(t.itemId, t.areaId, roundLikeTrader(t.truthNaira * 1.05), devices[0]);
+      submit(t.itemId, t.areaId, roundLikeTrader(t.truthAmount * 1.05, cur), devices[0], cur);
     }
     if (rand() < opts.outlierRate) {
-      submit(t.itemId, t.areaId, roundLikeTrader(t.truthNaira * 3.5), deviceHash(`sim-device-${++deviceCounter}`));
+      submit(t.itemId, t.areaId, roundLikeTrader(t.truthAmount * 3.5, cur), deviceHash(`sim-device-${++deviceCounter}`), cur);
     }
   }
   return { observations, stats };
@@ -142,11 +147,14 @@ export interface CaseResult {
   id: string;
   itemId: string;
   areaId: string;
+  country: string;
+  currency: string;
+  kind: "cross-source" | "control";
   category: string;
   split: "dev" | "test";
-  quoteNaira: number;
+  quote: number;
   expected: VerdictLabel;
-  trueNaira: number | null;
+  trueAmount: number | null;
   seedOnly: { label: VerdictLabel; mid: number | null };
   afterFeedback: { label: VerdictLabel; mid: number | null };
   note: string;
@@ -157,8 +165,8 @@ function score(results: CaseResult[], mode: "seedOnly" | "afterFeedback"): Score
   const answered = results.filter((r) => r[mode].label !== "uncertain");
   const answeredCorrect = answered.filter((r) => r[mode].label === r.expected).length;
   const pairs = results
-    .filter((r) => r[mode].mid != null && r.trueNaira != null)
-    .map((r) => ({ predicted: r[mode].mid as number, actual: r.trueNaira as number }));
+    .filter((r) => r[mode].mid != null && r.trueAmount != null)
+    .map((r) => ({ predicted: r[mode].mid as number, actual: r.trueAmount as number }));
   return {
     cases: results.length,
     correct,
@@ -176,6 +184,8 @@ export interface BenchmarkReport {
   totalCases: number;
   splits: Record<"dev" | "test" | "all", { seedOnly: ScoreBlock; afterFeedback: ScoreBlock }>;
   byCategory: Record<string, { seedOnly: ScoreBlock; afterFeedback: ScoreBlock }>;
+  /** Per country, with how many cases are cross-source versus control. */
+  byCountry: Record<string, { seedOnly: ScoreBlock; afterFeedback: ScoreBlock; testSeedOnly: ScoreBlock; testAfterFeedback: ScoreBlock; currency: string; crossSource: number; control: number }>;
   feedback: SimulatedFeedback["stats"] & { options: FeedbackSimOptions };
   results: CaseResult[];
   labelRule: string;
@@ -195,19 +205,23 @@ export function runBenchmark(
   const results: CaseResult[] = [];
   for (const c of bench.cases as BenchmarkCase[]) {
     const item = items.find((i) => i.id === c.itemId);
-    const area = areas.find((a) => a.id === c.areaId);
+    const area = areaFromId(areas, c.areaId);
     if (!item || !area) continue;
-    const seedV = codeVerdict(item, area, c.quoteNaira, refs, [], areas, asOf, { seedOnly: true });
-    const afterV = codeVerdict(item, area, c.quoteNaira, refs, sim.observations, areas, asOf, { includeDemo: false });
+    const country = area.country;
+    const seedV = codeVerdict(item, area, c.quote, refs, [], areas, asOf, { seedOnly: true });
+    const afterV = codeVerdict(item, area, c.quote, refs, sim.observations, areas, asOf, { includeDemo: false });
     results.push({
       id: c.id,
       itemId: c.itemId,
       areaId: c.areaId,
+      country,
+      currency: area.currency,
+      kind: c.kind ?? "cross-source",
       category: c.category ?? item.category,
       split: c.split ?? "test",
-      quoteNaira: c.quoteNaira,
+      quote: c.quote,
       expected: c.expected,
-      trueNaira: c.trueNaira,
+      trueAmount: c.trueAmount,
       seedOnly: { label: seedV.label, mid: seedV.range.mid },
       afterFeedback: { label: afterV.label, mid: afterV.range.mid },
       note: c.note,
@@ -215,6 +229,19 @@ export function runBenchmark(
   }
   const block = (rs: CaseResult[]) => ({ seedOnly: score(rs, "seedOnly"), afterFeedback: score(rs, "afterFeedback") });
   const categories = [...new Set(results.map((r) => r.category))];
+  const countries = [...new Set(results.map((r) => r.country))];
+  const countryBlock = (cc: string) => {
+    const rs = results.filter((r) => r.country === cc);
+    const test = rs.filter((r) => r.split === "test");
+    return {
+      ...block(rs),
+      testSeedOnly: score(test, "seedOnly"),
+      testAfterFeedback: score(test, "afterFeedback"),
+      currency: rs[0]?.currency ?? "",
+      crossSource: rs.filter((r) => r.kind === "cross-source").length,
+      control: rs.filter((r) => r.kind === "control").length,
+    };
+  };
   return {
     version: bench.version,
     asOf: bench.asOf,
@@ -225,6 +252,7 @@ export function runBenchmark(
       all: block(results),
     },
     byCategory: Object.fromEntries(categories.map((cat) => [cat, block(results.filter((r) => r.category === cat))])),
+    byCountry: Object.fromEntries(countries.map((cc) => [cc, countryBlock(cc)])),
     feedback: { ...sim.stats, options: opts },
     results,
     labelRule: bench.labelRule,

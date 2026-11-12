@@ -8,12 +8,25 @@ import {
   deviceHash,
   DUPLICATE_WINDOW_MS,
   reconcileVerdict,
-  naira,
 } from "../shared/engine.js";
+import {
+  areaFromId,
+  countryArea,
+  countryName,
+  CURRENCY_BY_COUNTRY,
+  itemName as itemNameFor,
+  itemUnit,
+  localeFor,
+  money,
+  resolveArea,
+  resolveItem,
+  unitOptions,
+  unitSystem,
+} from "../shared/geo.js";
 import { runBenchmark, type BenchmarkReport } from "../shared/benchmark.js";
 import { evidencePackText } from "../shared/sanitize.js";
 import { parsePriceFromText } from "../shared/ocr.js";
-import type { Observation, ReppoRecord, StoredVerdict, VerdictLabel } from "../shared/types.js";
+import type { Area, Item, Observation, ReppoRecord, StoredVerdict, VerdictLabel } from "../shared/types.js";
 import { DEMO_DEFAULT, hasReppo, hasServ, hasTelegram, reppoDailyCap, telegramWebhookSecret } from "./env.js";
 import { judgeWithServ, ServUnavailableError } from "./serv.js";
 import { isTerminal, refreshEval, ReppoBudgetError, submitEval } from "./reppo.js";
@@ -71,25 +84,27 @@ function benchmarkReport(): BenchmarkReport {
 function composeReasons(
   label: VerdictLabel,
   itemName: string,
-  areaName: string,
-  areaKind: string,
+  area: Area,
   code: ReturnType<typeof codeVerdict>,
   servReasons: string[],
   hardReasons: string[],
 ): string[] {
   const reasons = [...hardReasons, ...servReasons];
+  const m = (n: number) => money(n, area.currency, localeFor(area.country));
   if (reasons.length === 0) {
-    const mid = code.range.mid != null ? naira(code.range.mid) : "an unknown midpoint";
-    if (label === "fair") reasons.push(`The quote sits inside the recent ${areaName} range for ${itemName}, around ${mid}.`);
-    else if (label === "high") reasons.push(`The quote is above the recent ${areaName} range for ${itemName}, which centres near ${mid}.`);
-    else if (label === "low") reasons.push(`The quote is below the recent ${areaName} range for ${itemName}, which centres near ${mid}.`);
-    else reasons.push(`There is not yet a tight local range for ${itemName} in ${areaName}.`);
+    const mid = code.range.mid != null ? m(code.range.mid) : "an unknown midpoint";
+    if (label === "fair") reasons.push(`The quote sits inside the recent ${area.name} range for ${itemName}, around ${mid}.`);
+    else if (label === "high") reasons.push(`The quote is above the recent ${area.name} range for ${itemName}, which centres near ${mid}.`);
+    else if (label === "low") reasons.push(`The quote is below the recent ${area.name} range for ${itemName}, which centres near ${mid}.`);
+    else reasons.push(`Nobody has confirmed a price for ${itemName} in ${area.name} yet.`);
   }
-  if (code.reasonCodes.includes("zone-fallback") && areaKind === "state") {
-    reasons.push("No official state figure was on file, so the dated zonal average was used as the anchor.");
+  if (code.reasonCodes.includes("region-fallback") && area.kind !== "region") {
+    reasons.push(`No figure for ${area.name} itself was on file, so the dated regional average was used as the anchor.`);
+  } else if (code.reasonCodes.includes("region-fallback")) {
+    reasons.push("No figure for this exact area was on file, so a wider regional average was used as the anchor.");
   }
-  if (code.reasonCodes.includes("national-fallback") && areaKind !== "national") {
-    reasons.push("No closer official figure was on file, so the dated national average was used as the anchor.");
+  if (code.reasonCodes.includes("national-fallback") && area.kind !== "country") {
+    reasons.push(`No closer figure was on file, so the dated ${countryName(area.country)} national average was used as the anchor.`);
   }
   // De-duplicate near-identical sentences from SERV and code.
   const seen = new Set<string>();
@@ -121,11 +136,30 @@ app.get("/api/health", async (c) => {
 
 app.get("/api/catalog", (c) => {
   const seed = getSeed();
+  const seeded = new Set(seed.countries.map((x) => x.code));
+  const countries = Object.keys(CURRENCY_BY_COUNTRY)
+    .map((code) => ({
+      code,
+      name: countryName(code),
+      currency: CURRENCY_BY_COUNTRY[code],
+      locale: localeFor(code),
+      units: unitSystem(code),
+      seeded: seeded.has(code),
+      unitOptions: unitOptions(code),
+    }))
+    .sort((a, b) => Number(b.seeded) - Number(a.seeded) || a.name.localeCompare(b.name));
   return c.json({
-    currency: seed.currency,
-    country: seed.country,
     disclaimer: seed.disclaimer,
-    items: seed.items,
+    countries,
+    // Each item lists the countries where it has a cited figure, so the form can suggest local items first.
+    items: seed.items.map((i) => ({
+      ...i,
+      countries: [
+        ...new Set(
+          seed.officialRefs.filter((r) => r.itemId === i.id).map((r) => areaFromId(seed.areas, r.areaId)?.country).filter(Boolean),
+        ),
+      ],
+    })),
     areas: seed.areas,
   });
 });
@@ -133,8 +167,14 @@ app.get("/api/catalog", (c) => {
 app.post("/api/check", async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as {
     itemId?: string;
+    /** Free-text item, used when itemId is not a catalog id. */
+    itemText?: string;
+    unit?: string;
     areaId?: string;
-    quoteNaira?: number;
+    /** ISO 3166-1 alpha-2 country, with an optional free-text city or region. */
+    country?: string;
+    place?: string;
+    quote?: number;
     deviceId?: string;
     demo?: boolean | string;
     source?: "typed" | "photo-confirmed" | "telegram";
@@ -143,12 +183,14 @@ app.post("/api/check", async (c) => {
     return c.json({ error: "Too many checks in a short time. Try again in a few minutes." }, 429);
   }
   const seed = getSeed();
-  const item = seed.items.find((i) => i.id === body.itemId);
-  const area = seed.areas.find((a) => a.id === body.areaId);
-  const quote = Number(body.quoteNaira);
+  const area = resolveArea(seed.areas, { areaId: body.areaId, country: body.country, place: body.place });
+  const item = area ? resolveItem(seed.items, { itemId: body.itemId, text: body.itemText, unit: body.unit, country: area.country }) : undefined;
+  const quote = Number(body.quote);
   if (!item || !area || !Number.isFinite(quote) || quote <= 0 || quote > MAX_QUOTE) {
-    return c.json({ error: "Choose an item, an area, and a price greater than zero." }, 400);
+    return c.json({ error: "Choose a country, say what you are buying, and enter a price greater than zero." }, 400);
   }
+  const shownName = itemNameFor(item, area.country);
+  const unit = itemUnit(item, area.country);
   const demo = wantDemo(body.demo);
   const asOf = new Date();
   const observations = await observationsFor(demo, item.id);
@@ -159,7 +201,7 @@ app.post("/api/check", async (c) => {
   const servStarted = Date.now();
   if (!demo) {
     try {
-      serv = await judgeWithServ({ item, area, quote, code });
+      serv = await judgeWithServ({ item, area, quote, code, itemName: shownName, unit });
     } catch (err) {
       servError = err instanceof ServUnavailableError ? err.message : "SERV was unavailable.";
     }
@@ -168,11 +210,11 @@ app.post("/api/check", async (c) => {
       verdict: code.label,
       range_low: code.range.low,
       range_high: code.range.high,
-      unit: item.unit,
+      unit,
       confidence: (code.label === "uncertain" ? "low" : "medium") as "low" | "medium",
       reasons: [],
-      quotes: code.range.points.slice(0, 3).map((p) => `${p.label}: ${naira(p.priceNaira)}`),
-      negotiation_tip: defaultTip(code.label, item, code.range, quote),
+      quotes: code.range.points.slice(0, 3).map((p) => `${p.label}: ${money(p.price, area.currency, localeFor(area.country))}`),
+      negotiation_tip: defaultTip(code.label, item, code.range, quote, area.country),
       evidence_ids: code.range.points.map((p) => p.id),
     };
   }
@@ -182,16 +224,26 @@ app.post("/api/check", async (c) => {
   const rec = reconcileVerdict(quote, code.range, serv);
   const final = rec.label;
   const servText = rec.useServText ? serv : null;
-  const tip = (servText?.negotiation_tip && servText.negotiation_tip.trim()) || defaultTip(final, item, code.range, quote);
-  const reasons = composeReasons(final, item.name, area.name, area.kind, code, servText?.reasons ?? [], rec.reasons);
-  const quotes = servText?.quotes?.length ? servText.quotes : code.range.points.slice(0, 3).map((p) => `${p.label}: ${naira(p.priceNaira)}`);
+  const tip = (servText?.negotiation_tip && servText.negotiation_tip.trim()) || defaultTip(final, item, code.range, quote, area.country);
+  const reasons = composeReasons(final, shownName, area, code, servText?.reasons ?? [], rec.reasons);
+  const quotes = servText?.quotes?.length ? servText.quotes : code.range.points.slice(0, 3).map((p) => `${p.label}: ${money(p.price, area.currency, localeFor(area.country))}`);
+  // With no local data at all, SERV's own rough range is shown as a labelled guess, never as the band.
+  const guess =
+    code.range.mid == null && servText && typeof serv?.range_low === "number" && typeof serv?.range_high === "number" && serv.range_low > 0 && serv.range_high >= serv.range_low
+      ? { low: serv.range_low, high: serv.range_high }
+      : null;
 
   const stored: StoredVerdict = {
     id: `v-${randomUUID()}`,
     itemId: item.id,
     areaId: area.id,
-    quoteNaira: quote,
-    unit: item.unit,
+    quote: quote,
+    currency: area.currency,
+    country: area.country,
+    unit,
+    itemName: shownName,
+    areaName: area.name,
+    guess,
     code,
     serv,
     servError,
@@ -219,7 +271,7 @@ app.post("/api/check", async (c) => {
 
   const store = await getStore();
   await store.addVerdict(stored);
-  return c.json({ verdict: publicVerdict(stored, item.name, area.name), timing: { servMs } });
+  return c.json({ verdict: publicVerdict(stored), timing: { servMs } });
 });
 
 function fixtureEvalFor(itemId: string, areaId: string, quote: number) {
@@ -246,15 +298,25 @@ function reppoSummary(stored: StoredVerdict) {
   };
 }
 
-function publicVerdict(stored: StoredVerdict, itemName: string, areaName: string) {
+function publicVerdict(stored: StoredVerdict) {
+  const seed = getSeed();
+  const country = stored.country ?? "NG";
+  const item = resolveItem(seed.items, { itemId: stored.itemId });
+  const area = areaFromId(seed.areas, stored.areaId);
   return {
     id: stored.id,
     itemId: stored.itemId,
-    itemName,
+    itemName: stored.itemName ?? (item ? itemNameFor(item, country) : stored.itemId),
+    custom: Boolean(item?.custom),
     areaId: stored.areaId,
-    areaName,
-    quoteNaira: stored.quoteNaira,
+    areaName: stored.areaName ?? area?.name ?? stored.areaId,
+    country,
+    countryName: countryName(country),
+    currency: stored.currency ?? "NGN",
+    locale: localeFor(country),
+    quote: stored.quote,
     unit: stored.unit,
+    guess: stored.guess ?? null,
     label: stored.final,
     mid: stored.code.range.mid,
     low: stored.code.range.low,
@@ -278,7 +340,6 @@ function publicVerdict(stored: StoredVerdict, itemName: string, areaName: string
 }
 
 app.get("/api/verdict/:id", async (c) => {
-  const seed = getSeed();
   const store = await getStore();
   let stored = await store.getVerdict(c.req.param("id"));
   if (!stored) return c.json({ error: "That check was not found." }, 404);
@@ -292,16 +353,14 @@ app.get("/api/verdict/:id", async (c) => {
       // Keep the last known status; the next read will try again.
     }
   }
-  const item = seed.items.find((i) => i.id === stored.itemId);
-  const area = seed.areas.find((a) => a.id === stored.areaId);
-  return c.json({ verdict: publicVerdict(stored, item?.name ?? stored.itemId, area?.name ?? stored.areaId) });
+  return c.json({ verdict: publicVerdict(stored) });
 });
 
 app.post("/api/feedback", async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as {
     verdictId?: string;
     kind?: "paid" | "fair" | "not-fair";
-    paidNaira?: number;
+    paid?: number;
     deviceId?: string;
     demo?: boolean | string;
   };
@@ -314,14 +373,15 @@ app.post("/api/feedback", async (c) => {
   if (body.kind !== "paid" && body.kind !== "fair" && body.kind !== "not-fair") {
     return c.json({ error: "Choose a feedback type." }, 400);
   }
-  const paid = body.kind === "paid" ? Number(body.paidNaira ?? stored.quoteNaira) : undefined;
+  const paid = body.kind === "paid" ? Number(body.paid ?? stored.quote) : undefined;
   if (paid !== undefined && (!Number.isFinite(paid) || paid <= 0 || paid > MAX_QUOTE)) {
-    return c.json({ error: "Enter the amount you paid, in naira." }, 400);
+    return c.json({ error: "Enter the amount you paid, in the local currency." }, 400);
   }
   const seed = getSeed();
   const hash = deviceHash(body.deviceId || "anonymous");
   const demo = stored.demo || wantDemo(body.demo);
-  const feedback = await store.addFeedback({ verdictId: stored.id, kind: body.kind, paidNaira: paid, deviceHash: hash });
+  const currency = stored.currency ?? "NGN";
+  const feedback = await store.addFeedback({ verdictId: stored.id, kind: body.kind, paid, currency, deviceHash: hash });
 
   let observation: Observation | null = null;
   if (paid !== undefined) {
@@ -330,10 +390,10 @@ app.post("/api/feedback", async (c) => {
     let gate = applyAntiGaming({
       itemId: stored.itemId,
       areaId: stored.areaId,
-      priceNaira: paid,
+      price: paid,
       deviceHash: hash,
       now,
-      observations: await observationsFor(demo, stored.itemId),
+      observations: (await observationsFor(demo, stored.itemId)).filter((o) => (o.currency ?? currency) === currency),
       refs: seed.officialRefs,
       areas: seed.areas,
       device,
@@ -352,7 +412,11 @@ app.post("/api/feedback", async (c) => {
     observation = await store.addObservation({
       itemId: stored.itemId,
       areaId: stored.areaId,
-      priceNaira: paid,
+      price: paid,
+      currency,
+      unit: stored.unit,
+      itemName: stored.itemName,
+      verdictId: stored.id,
       source: "typed",
       status: gate.status,
       trust: gate.trust,
@@ -366,13 +430,13 @@ app.post("/api/feedback", async (c) => {
   // the verdict, its evidence, and what the buyer actually paid. One eval per check.
   let reppo: { state: string; message?: string } | null = null;
   if (paid !== undefined && !demo && !stored.reppoEvalId && observation?.status !== "rejected" && hasReppo()) {
-    const seedItem = seed.items.find((i) => i.id === stored.itemId);
-    const seedArea = seed.areas.find((a) => a.id === stored.areaId);
+    const pub = publicVerdict(stored);
     const pack = evidencePackText({
-      itemName: seedItem?.name ?? stored.itemId,
-      areaName: seedArea?.name ?? stored.areaId,
+      itemName: pub.itemName,
+      areaName: `${pub.areaName}, ${pub.countryName}`,
+      currency,
       unit: stored.unit,
-      quoteNaira: stored.quoteNaira,
+      quote: stored.quote,
       mid: stored.code.range.mid,
       low: stored.code.range.low,
       high: stored.code.range.high,
@@ -381,7 +445,7 @@ app.post("/api/feedback", async (c) => {
       reasons: stored.reasons,
       verdict: stored.final,
       tip: stored.tip,
-      paidNaira: paid,
+      paid: paid,
     });
     try {
       const rec = await submitEval({ taskType: "claim", input: pack, verdictId: stored.id });
@@ -401,18 +465,31 @@ app.post("/api/feedback", async (c) => {
 
 app.get("/api/board", async (c) => {
   const seed = getSeed();
-  const areaId = c.req.query("areaId") || "NG";
-  const area = seed.areas.find((a) => a.id === areaId);
-  if (!area) return c.json({ error: "Unknown area." }, 404);
+  const country = (c.req.query("country") || "").toUpperCase() || areaFromId(seed.areas, c.req.query("areaId") || "NG")?.country || "NG";
+  const area =
+    (c.req.query("areaId") ? areaFromId(seed.areas, c.req.query("areaId")!) : undefined) ?? countryArea(seed.areas, country);
+  if (!area || area.country !== country) return c.json({ error: "Unknown area." }, 404);
   const demo = wantDemo(c.req.query("demo"));
   const asOf = new Date();
-  const obs = await observationsFor(demo);
-  const rows = seed.items.map((item) => {
+  const obs = (await observationsFor(demo)).filter((o) => (o.currency ?? "NGN") === area.currency);
+  // Catalog items with any data in this country, plus free-text items people confirmed here.
+  const countryAreaIds = new Set(seed.areas.filter((a) => a.country === country).map((a) => a.id));
+  const inCountry = (id: string) => countryAreaIds.has(id) || id === country || id.startsWith(`${country}:`);
+  const catalog = seed.items.filter(
+    (i) => seed.officialRefs.some((r) => r.itemId === i.id && inCountry(r.areaId)) || obs.some((o) => o.itemId === i.id && inCountry(o.areaId)),
+  );
+  const customIds = [...new Set(obs.filter((o) => o.itemId.startsWith("x-") && inCountry(o.areaId)).map((o) => o.itemId))];
+  const custom: Item[] = customIds.map((id) => {
+    const named = obs.find((o) => o.itemId === id && o.itemName);
+    const base = resolveItem(seed.items, { itemId: id })!;
+    return { ...base, name: named?.itemName ?? base.name, unit: named?.unit ?? base.unit };
+  });
+  const rows = [...catalog, ...custom].map((item) => {
     const v = codeVerdict(item, area, 0, seed.officialRefs, obs, seed.areas, asOf, { includeDemo: demo });
     return {
       itemId: item.id,
-      itemName: item.name,
-      unit: item.unit,
+      itemName: itemNameFor(item, country),
+      unit: itemUnit(item, country),
       category: item.category,
       mid: v.range.mid,
       low: v.range.low,
@@ -423,7 +500,12 @@ app.get("/api/board", async (c) => {
       sampleSize: v.range.sampleSize,
     };
   });
-  return c.json({ area: { id: area.id, name: area.name, kind: area.kind }, areas: seed.areas, rows });
+  return c.json({
+    area: { id: area.id, name: area.name, kind: area.kind, country, currency: area.currency, locale: localeFor(country) },
+    areas: seed.areas.filter((a) => a.country === country),
+    countries: seed.countries,
+    rows,
+  });
 });
 
 app.get("/api/metrics", async (c) => {
@@ -448,6 +530,7 @@ app.get("/api/metrics", async (c) => {
       totalCases: bench.totalCases,
       splits: bench.splits,
       byCategory: bench.byCategory,
+      byCountry: bench.byCountry,
       feedback: bench.feedback,
       labelRule: bench.labelRule,
       method: bench.method,
@@ -456,9 +539,11 @@ app.get("/api/metrics", async (c) => {
         id: r.id,
         itemId: r.itemId,
         areaId: r.areaId,
+        country: r.country,
+        currency: r.currency,
         category: r.category,
         split: r.split,
-        quoteNaira: r.quoteNaira,
+        quote: r.quote,
         expected: r.expected,
         seedOnly: r.seedOnly.label,
         afterFeedback: r.afterFeedback.label,
@@ -468,6 +553,11 @@ app.get("/api/metrics", async (c) => {
       completed: completed.length,
       medianScore: median(completed.map((r) => r.score as number)),
       dailyCap: reppoDailyCap(),
+      trustEffects: {
+        boosted: live.filter((r) => r.trustEffect === "boosted").length,
+        reduced: live.filter((r) => r.trustEffect === "reduced").length,
+        unchanged: live.filter((r) => r.trustEffect === "unchanged").length,
+      },
       evals: all.map((e) => ({
         evalId: e.evalId,
         status: e.status,
@@ -477,6 +567,7 @@ app.get("/api/metrics", async (c) => {
         reason: e.reason,
         creditsCharged: e.creditsCharged,
         latencyMs: e.latencyMs ?? null,
+        trustEffect: e.trustEffect ?? null,
         createdAt: e.createdAt,
         source: e.source,
       })),
@@ -502,9 +593,10 @@ app.get("/api/reppo/:id", async (c) => {
 });
 
 app.post("/api/ocr-hint", async (c) => {
-  const body = (await c.req.json().catch(() => ({}))) as { text?: string };
+  const body = (await c.req.json().catch(() => ({}))) as { text?: string; currency?: string };
   const text = String(body.text ?? "").slice(0, 5000);
-  return c.json({ hint: parsePriceFromText(text) });
+  const currency = /^[A-Z]{3}$/.test(String(body.currency ?? "")) ? String(body.currency) : "NGN";
+  return c.json({ hint: parsePriceFromText(text, currency) });
 });
 
 app.post("/api/telegram", async (c) => {

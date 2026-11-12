@@ -21,7 +21,7 @@ describe("benchmark file", () => {
 
   it("labels every case by the fixed 15% rule against its reference, not by the engine", () => {
     for (const c of bench.cases) {
-      const r = c.quoteNaira / (c.trueNaira as number);
+      const r = c.quote / (c.trueAmount as number);
       const expected = r > 1.15 ? "high" : r < 0.85 ? "low" : "fair";
       expect(c.expected, c.id).toBe(expected);
       expect(bench.sources.some((s) => s.id === c.truthSource), c.id).toBe(true);

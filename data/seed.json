@@ -1,15 +1,16 @@
 {
-  "currency": "NGN",
-  "country": "NG",
   "generated": "2026-11-12",
-  "disclaimer": "Official figures are dated monthly averages from the National Bureau of Statistics (May 2026; cooking gas April 2026), not live stall or pump prices. They are cited in place, not a redistribution of NBS workbooks.",
+  "disclaimer": "Official figures are dated public averages (for example NBS in Nigeria, BLS in the US, ONS in the UK, KNBS in Kenya, ANP in Brazil, and published fuel and gas price lists in India), not live stall or pump prices. They are cited in place, not redistributed.",
   "items": [
     {
       "id": "rice-local",
       "name": "Local short-grained rice",
       "unit": "1 kg",
       "category": "food",
-      "nbsLabel": "Rice Local, short-Grained"
+      "nbsLabel": "Rice Local, short-Grained",
+      "aliases": [
+        "rice"
+      ]
     },
     {
       "id": "rice-imported",
@@ -37,7 +38,15 @@
       "name": "Fresh tomatoes",
       "unit": "1 kg",
       "category": "food",
-      "nbsLabel": "Tomatoes, fresh"
+      "nbsLabel": "Tomatoes, fresh",
+      "units": {
+        "US": "1 lb"
+      },
+      "aliases": [
+        "tomato",
+        "tomatoes",
+        "tomatoes (field grown)"
+      ]
     },
     {
       "id": "yam",
@@ -62,17 +71,49 @@
     },
     {
       "id": "pms",
-      "name": "Petrol (premium motor spirit)",
+      "name": "Petrol",
       "unit": "1 litre",
       "category": "fuel",
-      "nbsLabel": "Premium Motor Spirit average price per litre"
+      "nbsLabel": "Premium Motor Spirit average price per litre",
+      "names": {
+        "NG": "Petrol (premium motor spirit)",
+        "US": "Gasoline (regular)",
+        "KE": "Super petrol",
+        "BR": "Petrol (gasolina comum)",
+        "GB": "Petrol (unleaded)"
+      },
+      "units": {
+        "US": "1 US gallon"
+      },
+      "aliases": [
+        "gas",
+        "gasoline",
+        "fuel",
+        "pms",
+        "gasolina",
+        "unleaded",
+        "super petrol",
+        "petrol (premium motor spirit)"
+      ]
     },
     {
       "id": "lpg-12kg",
       "name": "Cooking gas refill (LPG)",
       "unit": "12.5 kg cylinder",
       "category": "fuel",
-      "nbsLabel": "Cooking Gas (LPG) 12.5kg refill"
+      "nbsLabel": "Cooking Gas (LPG) 12.5kg refill",
+      "units": {
+        "IN": "14.2 kg cylinder",
+        "KE": "13 kg cylinder",
+        "BR": "13 kg cylinder (P-13)"
+      },
+      "aliases": [
+        "lpg",
+        "cooking gas",
+        "gas cylinder",
+        "botijao",
+        "gas refill"
+      ]
     },
     {
       "id": "bus-city",
@@ -100,135 +141,461 @@
       "name": "Phone screen replacement, popular Android",
       "unit": "typical job",
       "category": "repair",
-      "nbsLabel": null
+      "nbsLabel": null,
+      "aliases": [
+        "screen replacement",
+        "phone repair"
+      ]
     },
     {
       "id": "room-rent",
       "name": "Single room monthly rent",
       "unit": "per month",
       "category": "rent",
-      "nbsLabel": null
+      "nbsLabel": null,
+      "aliases": [
+        "rent",
+        "room"
+      ]
     },
     {
       "id": "barbing",
       "name": "Men's haircut at a barbing salon",
       "unit": "basic cut",
       "category": "service",
-      "nbsLabel": null
+      "nbsLabel": null,
+      "aliases": [
+        "haircut",
+        "barber",
+        "hair cut"
+      ]
+    },
+    {
+      "id": "eggs-dozen",
+      "name": "Eggs, a dozen",
+      "unit": "dozen",
+      "category": "food",
+      "aliases": [
+        "eggs",
+        "egg",
+        "dozen eggs"
+      ],
+      "names": {
+        "GB": "Free-range eggs, a dozen",
+        "US": "Eggs, grade A large, a dozen"
+      }
+    },
+    {
+      "id": "bread-white",
+      "name": "White sliced bread",
+      "unit": "800 g loaf",
+      "category": "food",
+      "units": {
+        "US": "1 lb"
+      },
+      "aliases": [
+        "bread",
+        "loaf",
+        "white bread"
+      ]
+    },
+    {
+      "id": "milk",
+      "name": "Fresh milk",
+      "unit": "1 litre",
+      "category": "food",
+      "units": {
+        "US": "1 US gallon"
+      },
+      "names": {
+        "US": "Whole milk",
+        "KE": "Fresh unpacketed milk"
+      },
+      "aliases": [
+        "milk",
+        "whole milk"
+      ]
+    },
+    {
+      "id": "sugar",
+      "name": "White sugar",
+      "unit": "1 kg",
+      "category": "food",
+      "units": {
+        "US": "1 lb"
+      },
+      "aliases": [
+        "sugar"
+      ]
+    },
+    {
+      "id": "chicken-whole",
+      "name": "Whole chicken",
+      "unit": "1 kg",
+      "category": "food",
+      "units": {
+        "US": "1 lb"
+      },
+      "aliases": [
+        "chicken"
+      ]
+    },
+    {
+      "id": "wheat-flour",
+      "name": "Wheat flour",
+      "unit": "2 kg",
+      "category": "food",
+      "aliases": [
+        "flour",
+        "unga",
+        "wheat flour"
+      ]
     }
   ],
   "areas": [
     {
       "id": "NG",
       "name": "Nigeria (national)",
-      "kind": "national",
-      "state": null,
-      "zone": null,
-      "country": "NG"
+      "kind": "country",
+      "country": "NG",
+      "currency": "NGN",
+      "parentId": null
     },
     {
       "id": "NG-Z-NORTH-CENTRAL",
       "name": "North Central",
-      "kind": "zone",
-      "state": null,
-      "zone": "NORTH CENTRAL",
-      "country": "NG"
+      "kind": "region",
+      "country": "NG",
+      "currency": "NGN",
+      "parentId": "NG"
     },
     {
       "id": "NG-Z-NORTH-EAST",
       "name": "North East",
-      "kind": "zone",
-      "state": null,
-      "zone": "NORTH EAST",
-      "country": "NG"
+      "kind": "region",
+      "country": "NG",
+      "currency": "NGN",
+      "parentId": "NG"
     },
     {
       "id": "NG-Z-NORTH-WEST",
       "name": "North West",
-      "kind": "zone",
-      "state": null,
-      "zone": "NORTH WEST",
-      "country": "NG"
+      "kind": "region",
+      "country": "NG",
+      "currency": "NGN",
+      "parentId": "NG"
     },
     {
       "id": "NG-Z-SOUTH-EAST",
       "name": "South East",
-      "kind": "zone",
-      "state": null,
-      "zone": "SOUTH EAST",
-      "country": "NG"
+      "kind": "region",
+      "country": "NG",
+      "currency": "NGN",
+      "parentId": "NG"
     },
     {
       "id": "NG-Z-SOUTH-SOUTH",
       "name": "South South",
-      "kind": "zone",
-      "state": null,
-      "zone": "SOUTH SOUTH",
-      "country": "NG"
+      "kind": "region",
+      "country": "NG",
+      "currency": "NGN",
+      "parentId": "NG"
     },
     {
       "id": "NG-Z-SOUTH-WEST",
       "name": "South West",
-      "kind": "zone",
-      "state": null,
-      "zone": "SOUTH WEST",
-      "country": "NG"
+      "kind": "region",
+      "country": "NG",
+      "currency": "NGN",
+      "parentId": "NG"
     },
     {
       "id": "NG-ABUJA",
       "name": "Abuja",
-      "kind": "state",
-      "state": "Abuja",
-      "zone": "NORTH CENTRAL",
-      "country": "NG"
+      "kind": "region",
+      "country": "NG",
+      "currency": "NGN",
+      "parentId": "NG-Z-NORTH-CENTRAL",
+      "aliases": [
+        "FCT",
+        "Federal Capital Territory"
+      ]
     },
     {
       "id": "NG-KADUNA",
       "name": "Kaduna",
-      "kind": "state",
-      "state": "Kaduna",
-      "zone": "NORTH WEST",
-      "country": "NG"
+      "kind": "region",
+      "country": "NG",
+      "currency": "NGN",
+      "parentId": "NG-Z-NORTH-WEST"
     },
     {
       "id": "NG-KANO",
       "name": "Kano",
-      "kind": "state",
-      "state": "Kano",
-      "zone": "NORTH WEST",
-      "country": "NG"
+      "kind": "region",
+      "country": "NG",
+      "currency": "NGN",
+      "parentId": "NG-Z-NORTH-WEST"
     },
     {
       "id": "NG-ENUGU",
       "name": "Enugu",
-      "kind": "state",
-      "state": "Enugu",
-      "zone": "SOUTH EAST",
-      "country": "NG"
+      "kind": "region",
+      "country": "NG",
+      "currency": "NGN",
+      "parentId": "NG-Z-SOUTH-EAST"
     },
     {
       "id": "NG-RIVERS",
       "name": "Rivers",
-      "kind": "state",
-      "state": "Rivers",
-      "zone": "SOUTH SOUTH",
-      "country": "NG"
+      "kind": "region",
+      "country": "NG",
+      "currency": "NGN",
+      "parentId": "NG-Z-SOUTH-SOUTH"
     },
     {
       "id": "NG-OYO",
       "name": "Oyo",
-      "kind": "state",
-      "state": "Oyo",
-      "zone": "SOUTH WEST",
-      "country": "NG"
+      "kind": "region",
+      "country": "NG",
+      "currency": "NGN",
+      "parentId": "NG-Z-SOUTH-WEST"
     },
     {
       "id": "NG-BAUCHI",
       "name": "Bauchi",
-      "kind": "state",
-      "state": "Bauchi",
-      "zone": "NORTH EAST",
-      "country": "NG"
+      "kind": "region",
+      "country": "NG",
+      "currency": "NGN",
+      "parentId": "NG-Z-NORTH-EAST"
+    },
+    {
+      "id": "US",
+      "name": "United States",
+      "kind": "country",
+      "country": "US",
+      "currency": "USD",
+      "parentId": null,
+      "aliases": [
+        "USA",
+        "United States of America",
+        "America"
+      ]
+    },
+    {
+      "id": "GB",
+      "name": "United Kingdom",
+      "kind": "country",
+      "country": "GB",
+      "currency": "GBP",
+      "parentId": null,
+      "aliases": [
+        "UK",
+        "Britain",
+        "Great Britain"
+      ]
+    },
+    {
+      "id": "GB-BELFAST",
+      "name": "Greater Belfast",
+      "kind": "city",
+      "country": "GB",
+      "currency": "GBP",
+      "parentId": "GB",
+      "aliases": [
+        "Belfast"
+      ]
+    },
+    {
+      "id": "GB-HIGHLANDS",
+      "name": "Highlands and Islands",
+      "kind": "region",
+      "country": "GB",
+      "currency": "GBP",
+      "parentId": "GB",
+      "aliases": [
+        "Highlands",
+        "Inverness"
+      ]
+    },
+    {
+      "id": "IN",
+      "name": "India",
+      "kind": "country",
+      "country": "IN",
+      "currency": "INR",
+      "parentId": null
+    },
+    {
+      "id": "IN-DELHI",
+      "name": "Delhi",
+      "kind": "city",
+      "country": "IN",
+      "currency": "INR",
+      "parentId": "IN",
+      "aliases": [
+        "New Delhi"
+      ]
+    },
+    {
+      "id": "IN-MUMBAI",
+      "name": "Mumbai",
+      "kind": "city",
+      "country": "IN",
+      "currency": "INR",
+      "parentId": "IN",
+      "aliases": [
+        "Bombay"
+      ]
+    },
+    {
+      "id": "IN-KOLKATA",
+      "name": "Kolkata",
+      "kind": "city",
+      "country": "IN",
+      "currency": "INR",
+      "parentId": "IN",
+      "aliases": [
+        "Calcutta"
+      ]
+    },
+    {
+      "id": "IN-CHENNAI",
+      "name": "Chennai",
+      "kind": "city",
+      "country": "IN",
+      "currency": "INR",
+      "parentId": "IN",
+      "aliases": [
+        "Madras"
+      ]
+    },
+    {
+      "id": "IN-BENGALURU",
+      "name": "Bengaluru",
+      "kind": "city",
+      "country": "IN",
+      "currency": "INR",
+      "parentId": "IN",
+      "aliases": [
+        "Bangalore"
+      ]
+    },
+    {
+      "id": "IN-HYDERABAD",
+      "name": "Hyderabad",
+      "kind": "city",
+      "country": "IN",
+      "currency": "INR",
+      "parentId": "IN"
+    },
+    {
+      "id": "KE",
+      "name": "Kenya",
+      "kind": "country",
+      "country": "KE",
+      "currency": "KES",
+      "parentId": null
+    },
+    {
+      "id": "KE-NAIROBI",
+      "name": "Nairobi",
+      "kind": "city",
+      "country": "KE",
+      "currency": "KES",
+      "parentId": "KE"
+    },
+    {
+      "id": "KE-MOMBASA",
+      "name": "Mombasa",
+      "kind": "city",
+      "country": "KE",
+      "currency": "KES",
+      "parentId": "KE"
+    },
+    {
+      "id": "KE-KISUMU",
+      "name": "Kisumu",
+      "kind": "city",
+      "country": "KE",
+      "currency": "KES",
+      "parentId": "KE"
+    },
+    {
+      "id": "KE-NAKURU",
+      "name": "Nakuru",
+      "kind": "city",
+      "country": "KE",
+      "currency": "KES",
+      "parentId": "KE"
+    },
+    {
+      "id": "BR",
+      "name": "Brazil",
+      "kind": "country",
+      "country": "BR",
+      "currency": "BRL",
+      "parentId": null,
+      "aliases": [
+        "Brasil"
+      ]
+    },
+    {
+      "id": "BR-BRASILIA",
+      "name": "Brasília",
+      "kind": "city",
+      "country": "BR",
+      "currency": "BRL",
+      "parentId": "BR",
+      "aliases": [
+        "Brasilia"
+      ]
+    },
+    {
+      "id": "BR-MANAUS",
+      "name": "Manaus",
+      "kind": "city",
+      "country": "BR",
+      "currency": "BRL",
+      "parentId": "BR"
+    },
+    {
+      "id": "BR-PALMAS",
+      "name": "Palmas",
+      "kind": "city",
+      "country": "BR",
+      "currency": "BRL",
+      "parentId": "BR"
+    },
+    {
+      "id": "BR-VITORIA",
+      "name": "Vitória",
+      "kind": "city",
+      "country": "BR",
+      "currency": "BRL",
+      "parentId": "BR",
+      "aliases": [
+        "Vitoria"
+      ]
+    },
+    {
+      "id": "BR-NATAL",
+      "name": "Natal",
+      "kind": "city",
+      "country": "BR",
+      "currency": "BRL",
+      "parentId": "BR"
+    },
+    {
+      "id": "BR-MACAPA",
+      "name": "Macapá",
+      "kind": "city",
+      "country": "BR",
+      "currency": "BRL",
+      "parentId": "BR",
+      "aliases": [
+        "Macapa"
+      ]
     }
   ],
   "officialRefs": [
@@ -236,1205 +603,1901 @@
       "id": "ref-rice-local-NG",
       "itemId": "rice-local",
       "areaId": "NG",
-      "priceNaira": 1905.43,
-      "grain": "national",
+      "price": 1905.43,
+      "grain": "country",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "National average. Staple prices in this series are official averages, typically per kilogram unless the item label names another unit."
+      "note": "National average. Staple prices in this series are official averages, typically per kilogram unless the item label names another unit.",
+      "currency": "NGN"
     },
     {
       "id": "ref-rice-local-NG-Z-NORTH-CENTRAL",
       "itemId": "rice-local",
       "areaId": "NG-Z-NORTH-CENTRAL",
-      "priceNaira": 2031.24,
-      "grain": "zone",
+      "price": 2031.24,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North Central."
+      "note": "Geopolitical zone average for North Central.",
+      "currency": "NGN"
     },
     {
       "id": "ref-rice-local-NG-Z-NORTH-EAST",
       "itemId": "rice-local",
       "areaId": "NG-Z-NORTH-EAST",
-      "priceNaira": 1657.02,
-      "grain": "zone",
+      "price": 1657.02,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North East."
+      "note": "Geopolitical zone average for North East.",
+      "currency": "NGN"
     },
     {
       "id": "ref-rice-local-NG-Z-NORTH-WEST",
       "itemId": "rice-local",
       "areaId": "NG-Z-NORTH-WEST",
-      "priceNaira": 1895.4,
-      "grain": "zone",
+      "price": 1895.4,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North West."
+      "note": "Geopolitical zone average for North West.",
+      "currency": "NGN"
     },
     {
       "id": "ref-rice-local-NG-Z-SOUTH-EAST",
       "itemId": "rice-local",
       "areaId": "NG-Z-SOUTH-EAST",
-      "priceNaira": 2032.13,
-      "grain": "zone",
+      "price": 2032.13,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South East."
+      "note": "Geopolitical zone average for South East.",
+      "currency": "NGN"
     },
     {
       "id": "ref-rice-local-NG-Z-SOUTH-SOUTH",
       "itemId": "rice-local",
       "areaId": "NG-Z-SOUTH-SOUTH",
-      "priceNaira": 1835.52,
-      "grain": "zone",
+      "price": 1835.52,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South South."
+      "note": "Geopolitical zone average for South South.",
+      "currency": "NGN"
     },
     {
       "id": "ref-rice-local-NG-Z-SOUTH-WEST",
       "itemId": "rice-local",
       "areaId": "NG-Z-SOUTH-WEST",
-      "priceNaira": 1983.1,
-      "grain": "zone",
+      "price": 1983.1,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South West."
+      "note": "Geopolitical zone average for South West.",
+      "currency": "NGN"
     },
     {
       "id": "ref-rice-imported-NG",
       "itemId": "rice-imported",
       "areaId": "NG",
-      "priceNaira": 2245.7,
-      "grain": "national",
+      "price": 2245.7,
+      "grain": "country",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "National average. Staple prices in this series are official averages, typically per kilogram unless the item label names another unit."
+      "note": "National average. Staple prices in this series are official averages, typically per kilogram unless the item label names another unit.",
+      "currency": "NGN"
     },
     {
       "id": "ref-rice-imported-NG-Z-NORTH-CENTRAL",
       "itemId": "rice-imported",
       "areaId": "NG-Z-NORTH-CENTRAL",
-      "priceNaira": 2519.93,
-      "grain": "zone",
+      "price": 2519.93,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North Central."
+      "note": "Geopolitical zone average for North Central.",
+      "currency": "NGN"
     },
     {
       "id": "ref-rice-imported-NG-Z-NORTH-EAST",
       "itemId": "rice-imported",
       "areaId": "NG-Z-NORTH-EAST",
-      "priceNaira": 2035.35,
-      "grain": "zone",
+      "price": 2035.35,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North East."
+      "note": "Geopolitical zone average for North East.",
+      "currency": "NGN"
     },
     {
       "id": "ref-rice-imported-NG-Z-NORTH-WEST",
       "itemId": "rice-imported",
       "areaId": "NG-Z-NORTH-WEST",
-      "priceNaira": 2142.2,
-      "grain": "zone",
+      "price": 2142.2,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North West."
+      "note": "Geopolitical zone average for North West.",
+      "currency": "NGN"
     },
     {
       "id": "ref-rice-imported-NG-Z-SOUTH-EAST",
       "itemId": "rice-imported",
       "areaId": "NG-Z-SOUTH-EAST",
-      "priceNaira": 2262.27,
-      "grain": "zone",
+      "price": 2262.27,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South East."
+      "note": "Geopolitical zone average for South East.",
+      "currency": "NGN"
     },
     {
       "id": "ref-rice-imported-NG-Z-SOUTH-SOUTH",
       "itemId": "rice-imported",
       "areaId": "NG-Z-SOUTH-SOUTH",
-      "priceNaira": 2263.93,
-      "grain": "zone",
+      "price": 2263.93,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South South."
+      "note": "Geopolitical zone average for South South.",
+      "currency": "NGN"
     },
     {
       "id": "ref-rice-imported-NG-Z-SOUTH-WEST",
       "itemId": "rice-imported",
       "areaId": "NG-Z-SOUTH-WEST",
-      "priceNaira": 2224.81,
-      "grain": "zone",
+      "price": 2224.81,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South West."
+      "note": "Geopolitical zone average for South West.",
+      "currency": "NGN"
     },
     {
       "id": "ref-beans-brown-NG",
       "itemId": "beans-brown",
       "areaId": "NG",
-      "priceNaira": 1344.93,
-      "grain": "national",
+      "price": 1344.93,
+      "grain": "country",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "National average. Staple prices in this series are official averages, typically per kilogram unless the item label names another unit."
+      "note": "National average. Staple prices in this series are official averages, typically per kilogram unless the item label names another unit.",
+      "currency": "NGN"
     },
     {
       "id": "ref-beans-brown-NG-Z-NORTH-CENTRAL",
       "itemId": "beans-brown",
       "areaId": "NG-Z-NORTH-CENTRAL",
-      "priceNaira": 1248.52,
-      "grain": "zone",
+      "price": 1248.52,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North Central."
+      "note": "Geopolitical zone average for North Central.",
+      "currency": "NGN"
     },
     {
       "id": "ref-beans-brown-NG-Z-NORTH-EAST",
       "itemId": "beans-brown",
       "areaId": "NG-Z-NORTH-EAST",
-      "priceNaira": 876.46,
-      "grain": "zone",
+      "price": 876.46,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North East."
+      "note": "Geopolitical zone average for North East.",
+      "currency": "NGN"
     },
     {
       "id": "ref-beans-brown-NG-Z-NORTH-WEST",
       "itemId": "beans-brown",
       "areaId": "NG-Z-NORTH-WEST",
-      "priceNaira": 897.2,
-      "grain": "zone",
+      "price": 897.2,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North West."
+      "note": "Geopolitical zone average for North West.",
+      "currency": "NGN"
     },
     {
       "id": "ref-beans-brown-NG-Z-SOUTH-EAST",
       "itemId": "beans-brown",
       "areaId": "NG-Z-SOUTH-EAST",
-      "priceNaira": 1625.5,
-      "grain": "zone",
+      "price": 1625.5,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South East."
+      "note": "Geopolitical zone average for South East.",
+      "currency": "NGN"
     },
     {
       "id": "ref-beans-brown-NG-Z-SOUTH-SOUTH",
       "itemId": "beans-brown",
       "areaId": "NG-Z-SOUTH-SOUTH",
-      "priceNaira": 1768.66,
-      "grain": "zone",
+      "price": 1768.66,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South South."
+      "note": "Geopolitical zone average for South South.",
+      "currency": "NGN"
     },
     {
       "id": "ref-beans-brown-NG-Z-SOUTH-WEST",
       "itemId": "beans-brown",
       "areaId": "NG-Z-SOUTH-WEST",
-      "priceNaira": 1790.71,
-      "grain": "zone",
+      "price": 1790.71,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South West."
+      "note": "Geopolitical zone average for South West.",
+      "currency": "NGN"
     },
     {
       "id": "ref-garri-white-NG",
       "itemId": "garri-white",
       "areaId": "NG",
-      "priceNaira": 813.24,
-      "grain": "national",
+      "price": 813.24,
+      "grain": "country",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "National average. Staple prices in this series are official averages, typically per kilogram unless the item label names another unit."
+      "note": "National average. Staple prices in this series are official averages, typically per kilogram unless the item label names another unit.",
+      "currency": "NGN"
     },
     {
       "id": "ref-garri-white-NG-Z-NORTH-CENTRAL",
       "itemId": "garri-white",
       "areaId": "NG-Z-NORTH-CENTRAL",
-      "priceNaira": 676.21,
-      "grain": "zone",
+      "price": 676.21,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North Central."
+      "note": "Geopolitical zone average for North Central.",
+      "currency": "NGN"
     },
     {
       "id": "ref-garri-white-NG-Z-NORTH-EAST",
       "itemId": "garri-white",
       "areaId": "NG-Z-NORTH-EAST",
-      "priceNaira": 738.83,
-      "grain": "zone",
+      "price": 738.83,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North East."
+      "note": "Geopolitical zone average for North East.",
+      "currency": "NGN"
     },
     {
       "id": "ref-garri-white-NG-Z-NORTH-WEST",
       "itemId": "garri-white",
       "areaId": "NG-Z-NORTH-WEST",
-      "priceNaira": 797.6,
-      "grain": "zone",
+      "price": 797.6,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North West."
+      "note": "Geopolitical zone average for North West.",
+      "currency": "NGN"
     },
     {
       "id": "ref-garri-white-NG-Z-SOUTH-EAST",
       "itemId": "garri-white",
       "areaId": "NG-Z-SOUTH-EAST",
-      "priceNaira": 947.08,
-      "grain": "zone",
+      "price": 947.08,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South East."
+      "note": "Geopolitical zone average for South East.",
+      "currency": "NGN"
     },
     {
       "id": "ref-garri-white-NG-Z-SOUTH-SOUTH",
       "itemId": "garri-white",
       "areaId": "NG-Z-SOUTH-SOUTH",
-      "priceNaira": 944.01,
-      "grain": "zone",
+      "price": 944.01,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South South."
+      "note": "Geopolitical zone average for South South.",
+      "currency": "NGN"
     },
     {
       "id": "ref-garri-white-NG-Z-SOUTH-WEST",
       "itemId": "garri-white",
       "areaId": "NG-Z-SOUTH-WEST",
-      "priceNaira": 823.46,
-      "grain": "zone",
+      "price": 823.46,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South West."
+      "note": "Geopolitical zone average for South West.",
+      "currency": "NGN"
     },
     {
       "id": "ref-tomatoes-NG",
       "itemId": "tomatoes",
       "areaId": "NG",
-      "priceNaira": 1560.56,
-      "grain": "national",
+      "price": 1560.56,
+      "grain": "country",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "National average. Staple prices in this series are official averages, typically per kilogram unless the item label names another unit."
+      "note": "National average. Staple prices in this series are official averages, typically per kilogram unless the item label names another unit.",
+      "currency": "NGN"
     },
     {
       "id": "ref-tomatoes-NG-Z-NORTH-CENTRAL",
       "itemId": "tomatoes",
       "areaId": "NG-Z-NORTH-CENTRAL",
-      "priceNaira": 1451.25,
-      "grain": "zone",
+      "price": 1451.25,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North Central."
+      "note": "Geopolitical zone average for North Central.",
+      "currency": "NGN"
     },
     {
       "id": "ref-tomatoes-NG-Z-NORTH-EAST",
       "itemId": "tomatoes",
       "areaId": "NG-Z-NORTH-EAST",
-      "priceNaira": 1450.2,
-      "grain": "zone",
+      "price": 1450.2,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North East."
+      "note": "Geopolitical zone average for North East.",
+      "currency": "NGN"
     },
     {
       "id": "ref-tomatoes-NG-Z-NORTH-WEST",
       "itemId": "tomatoes",
       "areaId": "NG-Z-NORTH-WEST",
-      "priceNaira": 1182.39,
-      "grain": "zone",
+      "price": 1182.39,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North West."
+      "note": "Geopolitical zone average for North West.",
+      "currency": "NGN"
     },
     {
       "id": "ref-tomatoes-NG-Z-SOUTH-EAST",
       "itemId": "tomatoes",
       "areaId": "NG-Z-SOUTH-EAST",
-      "priceNaira": 1838.4,
-      "grain": "zone",
+      "price": 1838.4,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South East."
+      "note": "Geopolitical zone average for South East.",
+      "currency": "NGN"
     },
     {
       "id": "ref-tomatoes-NG-Z-SOUTH-SOUTH",
       "itemId": "tomatoes",
       "areaId": "NG-Z-SOUTH-SOUTH",
-      "priceNaira": 1821.6,
-      "grain": "zone",
+      "price": 1821.6,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South South."
+      "note": "Geopolitical zone average for South South.",
+      "currency": "NGN"
     },
     {
       "id": "ref-tomatoes-NG-Z-SOUTH-WEST",
       "itemId": "tomatoes",
       "areaId": "NG-Z-SOUTH-WEST",
-      "priceNaira": 1747.05,
-      "grain": "zone",
+      "price": 1747.05,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South West."
+      "note": "Geopolitical zone average for South West.",
+      "currency": "NGN"
     },
     {
       "id": "ref-yam-NG",
       "itemId": "yam",
       "areaId": "NG",
-      "priceNaira": 2347.09,
-      "grain": "national",
+      "price": 2347.09,
+      "grain": "country",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "National average. Staple prices in this series are official averages, typically per kilogram unless the item label names another unit."
+      "note": "National average. Staple prices in this series are official averages, typically per kilogram unless the item label names another unit.",
+      "currency": "NGN"
     },
     {
       "id": "ref-yam-NG-Z-NORTH-CENTRAL",
       "itemId": "yam",
       "areaId": "NG-Z-NORTH-CENTRAL",
-      "priceNaira": 2119.73,
-      "grain": "zone",
+      "price": 2119.73,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North Central."
+      "note": "Geopolitical zone average for North Central.",
+      "currency": "NGN"
     },
     {
       "id": "ref-yam-NG-Z-NORTH-EAST",
       "itemId": "yam",
       "areaId": "NG-Z-NORTH-EAST",
-      "priceNaira": 2172.71,
-      "grain": "zone",
+      "price": 2172.71,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North East."
+      "note": "Geopolitical zone average for North East.",
+      "currency": "NGN"
     },
     {
       "id": "ref-yam-NG-Z-NORTH-WEST",
       "itemId": "yam",
       "areaId": "NG-Z-NORTH-WEST",
-      "priceNaira": 2234.32,
-      "grain": "zone",
+      "price": 2234.32,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North West."
+      "note": "Geopolitical zone average for North West.",
+      "currency": "NGN"
     },
     {
       "id": "ref-yam-NG-Z-SOUTH-EAST",
       "itemId": "yam",
       "areaId": "NG-Z-SOUTH-EAST",
-      "priceNaira": 2540.67,
-      "grain": "zone",
+      "price": 2540.67,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South East."
+      "note": "Geopolitical zone average for South East.",
+      "currency": "NGN"
     },
     {
       "id": "ref-yam-NG-Z-SOUTH-SOUTH",
       "itemId": "yam",
       "areaId": "NG-Z-SOUTH-SOUTH",
-      "priceNaira": 2632.08,
-      "grain": "zone",
+      "price": 2632.08,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South South."
+      "note": "Geopolitical zone average for South South.",
+      "currency": "NGN"
     },
     {
       "id": "ref-yam-NG-Z-SOUTH-WEST",
       "itemId": "yam",
       "areaId": "NG-Z-SOUTH-WEST",
-      "priceNaira": 2471.97,
-      "grain": "zone",
+      "price": 2471.97,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South West."
+      "note": "Geopolitical zone average for South West.",
+      "currency": "NGN"
     },
     {
       "id": "ref-palm-oil-NG",
       "itemId": "palm-oil",
       "areaId": "NG",
-      "priceNaira": 2396.62,
-      "grain": "national",
+      "price": 2396.62,
+      "grain": "country",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "National average. Staple prices in this series are official averages, typically per kilogram unless the item label names another unit."
+      "note": "National average. Staple prices in this series are official averages, typically per kilogram unless the item label names another unit.",
+      "currency": "NGN"
     },
     {
       "id": "ref-palm-oil-NG-Z-NORTH-CENTRAL",
       "itemId": "palm-oil",
       "areaId": "NG-Z-NORTH-CENTRAL",
-      "priceNaira": 2457.3,
-      "grain": "zone",
+      "price": 2457.3,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North Central."
+      "note": "Geopolitical zone average for North Central.",
+      "currency": "NGN"
     },
     {
       "id": "ref-palm-oil-NG-Z-NORTH-EAST",
       "itemId": "palm-oil",
       "areaId": "NG-Z-NORTH-EAST",
-      "priceNaira": 2288.33,
-      "grain": "zone",
+      "price": 2288.33,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North East."
+      "note": "Geopolitical zone average for North East.",
+      "currency": "NGN"
     },
     {
       "id": "ref-palm-oil-NG-Z-NORTH-WEST",
       "itemId": "palm-oil",
       "areaId": "NG-Z-NORTH-WEST",
-      "priceNaira": 2416.1,
-      "grain": "zone",
+      "price": 2416.1,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for North West."
+      "note": "Geopolitical zone average for North West.",
+      "currency": "NGN"
     },
     {
       "id": "ref-palm-oil-NG-Z-SOUTH-EAST",
       "itemId": "palm-oil",
       "areaId": "NG-Z-SOUTH-EAST",
-      "priceNaira": 2241.39,
-      "grain": "zone",
+      "price": 2241.39,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South East."
+      "note": "Geopolitical zone average for South East.",
+      "currency": "NGN"
     },
     {
       "id": "ref-palm-oil-NG-Z-SOUTH-SOUTH",
       "itemId": "palm-oil",
       "areaId": "NG-Z-SOUTH-SOUTH",
-      "priceNaira": 2365.5,
-      "grain": "zone",
+      "price": 2365.5,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South South."
+      "note": "Geopolitical zone average for South South.",
+      "currency": "NGN"
     },
     {
       "id": "ref-palm-oil-NG-Z-SOUTH-WEST",
       "itemId": "palm-oil",
       "areaId": "NG-Z-SOUTH-WEST",
-      "priceNaira": 2571.85,
-      "grain": "zone",
+      "price": 2571.85,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Selected Food Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "Geopolitical zone average for South West."
+      "note": "Geopolitical zone average for South West.",
+      "currency": "NGN"
     },
     {
       "id": "ref-pms-NG",
       "itemId": "pms",
       "areaId": "NG",
-      "priceNaira": 1596.25,
-      "grain": "national",
+      "price": 1596.25,
+      "grain": "country",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Premium Motor Spirit (Petrol) Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/157",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "National average retail price paid, naira per litre."
+      "note": "National average retail price paid, naira per litre.",
+      "currency": "NGN"
     },
     {
       "id": "ref-pms-NG-ABUJA",
       "itemId": "pms",
       "areaId": "NG-ABUJA",
-      "priceNaira": 1602.64,
-      "grain": "state",
+      "price": 1602.64,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Premium Motor Spirit (Petrol) Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/157",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average retail price paid in Abuja, naira per litre."
+      "note": "State average retail price paid in Abuja, naira per litre.",
+      "currency": "NGN"
     },
     {
       "id": "ref-pms-NG-KADUNA",
       "itemId": "pms",
       "areaId": "NG-KADUNA",
-      "priceNaira": 1573.46,
-      "grain": "state",
+      "price": 1573.46,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Premium Motor Spirit (Petrol) Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/157",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average retail price paid in Kaduna, naira per litre."
+      "note": "State average retail price paid in Kaduna, naira per litre.",
+      "currency": "NGN"
     },
     {
       "id": "ref-pms-NG-KANO",
       "itemId": "pms",
       "areaId": "NG-KANO",
-      "priceNaira": 1607.27,
-      "grain": "state",
+      "price": 1607.27,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Premium Motor Spirit (Petrol) Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/157",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average retail price paid in Kano, naira per litre."
+      "note": "State average retail price paid in Kano, naira per litre.",
+      "currency": "NGN"
     },
     {
       "id": "ref-pms-NG-ENUGU",
       "itemId": "pms",
       "areaId": "NG-ENUGU",
-      "priceNaira": 1570.23,
-      "grain": "state",
+      "price": 1570.23,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Premium Motor Spirit (Petrol) Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/157",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average retail price paid in Enugu, naira per litre."
+      "note": "State average retail price paid in Enugu, naira per litre.",
+      "currency": "NGN"
     },
     {
       "id": "ref-pms-NG-RIVERS",
       "itemId": "pms",
       "areaId": "NG-RIVERS",
-      "priceNaira": 1580.76,
-      "grain": "state",
+      "price": 1580.76,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Premium Motor Spirit (Petrol) Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/157",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average retail price paid in Rivers, naira per litre."
+      "note": "State average retail price paid in Rivers, naira per litre.",
+      "currency": "NGN"
     },
     {
       "id": "ref-pms-NG-OYO",
       "itemId": "pms",
       "areaId": "NG-OYO",
-      "priceNaira": 1639.97,
-      "grain": "state",
+      "price": 1639.97,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Premium Motor Spirit (Petrol) Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/157",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average retail price paid in Oyo, naira per litre."
+      "note": "State average retail price paid in Oyo, naira per litre.",
+      "currency": "NGN"
     },
     {
       "id": "ref-pms-NG-BAUCHI",
       "itemId": "pms",
       "areaId": "NG-BAUCHI",
-      "priceNaira": 1715.47,
-      "grain": "state",
+      "price": 1715.47,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Premium Motor Spirit (Petrol) Price Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/157",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average retail price paid in Bauchi, naira per litre."
+      "note": "State average retail price paid in Bauchi, naira per litre.",
+      "currency": "NGN"
     },
     {
       "id": "ref-bus-city-NG",
       "itemId": "bus-city",
       "areaId": "NG",
-      "priceNaira": 1431.25,
-      "grain": "national",
+      "price": 1431.25,
+      "grain": "country",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "National average fare paid, per drop."
+      "note": "National average fare paid, per drop.",
+      "currency": "NGN"
     },
     {
       "id": "ref-bus-city-NG-ABUJA",
       "itemId": "bus-city",
       "areaId": "NG-ABUJA",
-      "priceNaira": 1409.81,
-      "grain": "state",
+      "price": 1409.81,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Abuja."
+      "note": "State average fare paid in Abuja.",
+      "currency": "NGN"
     },
     {
       "id": "ref-bus-city-NG-KADUNA",
       "itemId": "bus-city",
       "areaId": "NG-KADUNA",
-      "priceNaira": 1576.04,
-      "grain": "state",
+      "price": 1576.04,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Kaduna."
+      "note": "State average fare paid in Kaduna.",
+      "currency": "NGN"
     },
     {
       "id": "ref-bus-city-NG-KANO",
       "itemId": "bus-city",
       "areaId": "NG-KANO",
-      "priceNaira": 1066.0,
-      "grain": "state",
+      "price": 1066.0,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Kano."
+      "note": "State average fare paid in Kano.",
+      "currency": "NGN"
     },
     {
       "id": "ref-bus-city-NG-ENUGU",
       "itemId": "bus-city",
       "areaId": "NG-ENUGU",
-      "priceNaira": 1664.09,
-      "grain": "state",
+      "price": 1664.09,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Enugu."
+      "note": "State average fare paid in Enugu.",
+      "currency": "NGN"
     },
     {
       "id": "ref-bus-city-NG-RIVERS",
       "itemId": "bus-city",
       "areaId": "NG-RIVERS",
-      "priceNaira": 1187.78,
-      "grain": "state",
+      "price": 1187.78,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Rivers."
+      "note": "State average fare paid in Rivers.",
+      "currency": "NGN"
     },
     {
       "id": "ref-bus-city-NG-OYO",
       "itemId": "bus-city",
       "areaId": "NG-OYO",
-      "priceNaira": 1445.05,
-      "grain": "state",
+      "price": 1445.05,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Oyo."
+      "note": "State average fare paid in Oyo.",
+      "currency": "NGN"
     },
     {
       "id": "ref-bus-city-NG-BAUCHI",
       "itemId": "bus-city",
       "areaId": "NG-BAUCHI",
-      "priceNaira": 1463.24,
-      "grain": "state",
+      "price": 1463.24,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Bauchi."
+      "note": "State average fare paid in Bauchi.",
+      "currency": "NGN"
     },
     {
       "id": "ref-okada-NG",
       "itemId": "okada",
       "areaId": "NG",
-      "priceNaira": 1072.51,
-      "grain": "national",
+      "price": 1072.51,
+      "grain": "country",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "National average fare paid, per drop."
+      "note": "National average fare paid, per drop.",
+      "currency": "NGN"
     },
     {
       "id": "ref-okada-NG-ABUJA",
       "itemId": "okada",
       "areaId": "NG-ABUJA",
-      "priceNaira": 1081.31,
-      "grain": "state",
+      "price": 1081.31,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Abuja."
+      "note": "State average fare paid in Abuja.",
+      "currency": "NGN"
     },
     {
       "id": "ref-okada-NG-KADUNA",
       "itemId": "okada",
       "areaId": "NG-KADUNA",
-      "priceNaira": 1720.76,
-      "grain": "state",
+      "price": 1720.76,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Kaduna."
+      "note": "State average fare paid in Kaduna.",
+      "currency": "NGN"
     },
     {
       "id": "ref-okada-NG-KANO",
       "itemId": "okada",
       "areaId": "NG-KANO",
-      "priceNaira": 1053.18,
-      "grain": "state",
+      "price": 1053.18,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Kano."
+      "note": "State average fare paid in Kano.",
+      "currency": "NGN"
     },
     {
       "id": "ref-okada-NG-ENUGU",
       "itemId": "okada",
       "areaId": "NG-ENUGU",
-      "priceNaira": 887.63,
-      "grain": "state",
+      "price": 887.63,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Enugu."
+      "note": "State average fare paid in Enugu.",
+      "currency": "NGN"
     },
     {
       "id": "ref-okada-NG-RIVERS",
       "itemId": "okada",
       "areaId": "NG-RIVERS",
-      "priceNaira": 1298.26,
-      "grain": "state",
+      "price": 1298.26,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Rivers."
+      "note": "State average fare paid in Rivers.",
+      "currency": "NGN"
     },
     {
       "id": "ref-okada-NG-OYO",
       "itemId": "okada",
       "areaId": "NG-OYO",
-      "priceNaira": 999.77,
-      "grain": "state",
+      "price": 999.77,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Oyo."
+      "note": "State average fare paid in Oyo.",
+      "currency": "NGN"
     },
     {
       "id": "ref-okada-NG-BAUCHI",
       "itemId": "okada",
       "areaId": "NG-BAUCHI",
-      "priceNaira": 937.37,
-      "grain": "state",
+      "price": 937.37,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Bauchi."
+      "note": "State average fare paid in Bauchi.",
+      "currency": "NGN"
     },
     {
       "id": "ref-bus-intercity-NG",
       "itemId": "bus-intercity",
       "areaId": "NG",
-      "priceNaira": 9699.55,
-      "grain": "national",
+      "price": 9699.55,
+      "grain": "country",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "National average fare paid, per person on a state route."
+      "note": "National average fare paid, per person on a state route.",
+      "currency": "NGN"
     },
     {
       "id": "ref-bus-intercity-NG-ABUJA",
       "itemId": "bus-intercity",
       "areaId": "NG-ABUJA",
-      "priceNaira": 11024.94,
-      "grain": "state",
+      "price": 11024.94,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Abuja."
+      "note": "State average fare paid in Abuja.",
+      "currency": "NGN"
     },
     {
       "id": "ref-bus-intercity-NG-KADUNA",
       "itemId": "bus-intercity",
       "areaId": "NG-KADUNA",
-      "priceNaira": 10683.72,
-      "grain": "state",
+      "price": 10683.72,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Kaduna."
+      "note": "State average fare paid in Kaduna.",
+      "currency": "NGN"
     },
     {
       "id": "ref-bus-intercity-NG-KANO",
       "itemId": "bus-intercity",
       "areaId": "NG-KANO",
-      "priceNaira": 9410.81,
-      "grain": "state",
+      "price": 9410.81,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Kano."
+      "note": "State average fare paid in Kano.",
+      "currency": "NGN"
     },
     {
       "id": "ref-bus-intercity-NG-ENUGU",
       "itemId": "bus-intercity",
       "areaId": "NG-ENUGU",
-      "priceNaira": 10344.63,
-      "grain": "state",
+      "price": 10344.63,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Enugu."
+      "note": "State average fare paid in Enugu.",
+      "currency": "NGN"
     },
     {
       "id": "ref-bus-intercity-NG-RIVERS",
       "itemId": "bus-intercity",
       "areaId": "NG-RIVERS",
-      "priceNaira": 9599.31,
-      "grain": "state",
+      "price": 9599.31,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Rivers."
+      "note": "State average fare paid in Rivers.",
+      "currency": "NGN"
     },
     {
       "id": "ref-bus-intercity-NG-OYO",
       "itemId": "bus-intercity",
       "areaId": "NG-OYO",
-      "priceNaira": 9143.81,
-      "grain": "state",
+      "price": 9143.81,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Oyo."
+      "note": "State average fare paid in Oyo.",
+      "currency": "NGN"
     },
     {
       "id": "ref-bus-intercity-NG-BAUCHI",
       "itemId": "bus-intercity",
       "areaId": "NG-BAUCHI",
-      "priceNaira": 8700.46,
-      "grain": "state",
+      "price": 8700.46,
+      "grain": "region",
       "period": "2026-05",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Transport Fare Watch, May 2026",
       "sourceUrl": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
-      "note": "State average fare paid in Bauchi."
+      "note": "State average fare paid in Bauchi.",
+      "currency": "NGN"
     },
     {
       "id": "ref-lpg-12kg-NG",
       "itemId": "lpg-12kg",
       "areaId": "NG",
-      "priceNaira": 22382.2,
-      "grain": "national",
+      "price": 22382.2,
+      "grain": "country",
       "period": "2026-04",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Cooking Gas Price Watch, April 2026",
       "sourceUrl": "https://nannews.ng/cooking-gas-price-continues-to-rise-nbs/",
       "retrieved": "2026-11-12",
       "licenceNote": "NBS Cooking Gas Price Watch, April 2026, as published in the NBS press summary and reported by the News Agency of Nigeria. Only the headline averages quoted in the press are used; no NBS workbook is included.",
-      "note": "Average retail price for refilling a 12.5 kg cylinder."
+      "note": "Average retail price for refilling a 12.5 kg cylinder.",
+      "currency": "NGN"
     },
     {
       "id": "ref-lpg-12kg-NG-Z-NORTH-WEST",
       "itemId": "lpg-12kg",
       "areaId": "NG-Z-NORTH-WEST",
-      "priceNaira": 23276.95,
-      "grain": "zone",
+      "price": 23276.95,
+      "grain": "region",
       "period": "2026-04",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Cooking Gas Price Watch, April 2026",
       "sourceUrl": "https://nannews.ng/cooking-gas-price-continues-to-rise-nbs/",
       "retrieved": "2026-11-12",
       "licenceNote": "NBS Cooking Gas Price Watch, April 2026, as published in the NBS press summary and reported by the News Agency of Nigeria. Only the headline averages quoted in the press are used; no NBS workbook is included.",
-      "note": "Average retail price for refilling a 12.5 kg cylinder."
+      "note": "Average retail price for refilling a 12.5 kg cylinder.",
+      "currency": "NGN"
     },
     {
       "id": "ref-lpg-12kg-NG-Z-NORTH-CENTRAL",
       "itemId": "lpg-12kg",
       "areaId": "NG-Z-NORTH-CENTRAL",
-      "priceNaira": 22865.29,
-      "grain": "zone",
+      "price": 22865.29,
+      "grain": "region",
       "period": "2026-04",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Cooking Gas Price Watch, April 2026",
       "sourceUrl": "https://nannews.ng/cooking-gas-price-continues-to-rise-nbs/",
       "retrieved": "2026-11-12",
       "licenceNote": "NBS Cooking Gas Price Watch, April 2026, as published in the NBS press summary and reported by the News Agency of Nigeria. Only the headline averages quoted in the press are used; no NBS workbook is included.",
-      "note": "Average retail price for refilling a 12.5 kg cylinder."
+      "note": "Average retail price for refilling a 12.5 kg cylinder.",
+      "currency": "NGN"
     },
     {
       "id": "ref-lpg-12kg-NG-Z-SOUTH-EAST",
       "itemId": "lpg-12kg",
       "areaId": "NG-Z-SOUTH-EAST",
-      "priceNaira": 21060.92,
-      "grain": "zone",
+      "price": 21060.92,
+      "grain": "region",
       "period": "2026-04",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Cooking Gas Price Watch, April 2026",
       "sourceUrl": "https://nannews.ng/cooking-gas-price-continues-to-rise-nbs/",
       "retrieved": "2026-11-12",
       "licenceNote": "NBS Cooking Gas Price Watch, April 2026, as published in the NBS press summary and reported by the News Agency of Nigeria. Only the headline averages quoted in the press are used; no NBS workbook is included.",
-      "note": "Average retail price for refilling a 12.5 kg cylinder."
+      "note": "Average retail price for refilling a 12.5 kg cylinder.",
+      "currency": "NGN"
     },
     {
       "id": "ref-lpg-12kg-NG-BAUCHI",
       "itemId": "lpg-12kg",
       "areaId": "NG-BAUCHI",
-      "priceNaira": 20178.87,
-      "grain": "state",
+      "price": 20178.87,
+      "grain": "region",
       "period": "2026-04",
       "source": "National Bureau of Statistics, Nigeria",
       "series": "Cooking Gas Price Watch, April 2026",
       "sourceUrl": "https://nannews.ng/cooking-gas-price-continues-to-rise-nbs/",
       "retrieved": "2026-11-12",
       "licenceNote": "NBS Cooking Gas Price Watch, April 2026, as published in the NBS press summary and reported by the News Agency of Nigeria. Only the headline averages quoted in the press are used; no NBS workbook is included.",
-      "note": "Average retail price for refilling a 12.5 kg cylinder."
+      "note": "Average retail price for refilling a 12.5 kg cylinder.",
+      "currency": "NGN"
+    },
+    {
+      "id": "ref-pms-US-bls",
+      "itemId": "pms",
+      "areaId": "US",
+      "price": 4.482,
+      "currency": "USD",
+      "grain": "country",
+      "source": "U.S. Bureau of Labor Statistics",
+      "series": "CPI Average Price Data, U.S. city average, September 2026",
+      "sourceUrl": "https://alfred.stlouisfed.org/release?rd=2026-10-14&rid=454",
+      "period": "2026-09",
+      "licenceNote": "US government work, public domain.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-eggs-dozen-US-bls",
+      "itemId": "eggs-dozen",
+      "areaId": "US",
+      "price": 2.272,
+      "currency": "USD",
+      "grain": "country",
+      "source": "U.S. Bureau of Labor Statistics",
+      "series": "CPI Average Price Data, U.S. city average, September 2026",
+      "sourceUrl": "https://alfred.stlouisfed.org/release?rd=2026-10-14&rid=454",
+      "period": "2026-09",
+      "licenceNote": "US government work, public domain.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-bread-white-US-bls",
+      "itemId": "bread-white",
+      "areaId": "US",
+      "price": 1.83,
+      "currency": "USD",
+      "grain": "country",
+      "source": "U.S. Bureau of Labor Statistics",
+      "series": "CPI Average Price Data, U.S. city average, September 2026",
+      "sourceUrl": "https://alfred.stlouisfed.org/release?rd=2026-10-14&rid=454",
+      "period": "2026-09",
+      "licenceNote": "US government work, public domain.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-milk-US-bls",
+      "itemId": "milk",
+      "areaId": "US",
+      "price": 4.106,
+      "currency": "USD",
+      "grain": "country",
+      "source": "U.S. Bureau of Labor Statistics",
+      "series": "CPI Average Price Data, U.S. city average, September 2026",
+      "sourceUrl": "https://alfred.stlouisfed.org/release?rd=2026-10-14&rid=454",
+      "period": "2026-09",
+      "licenceNote": "US government work, public domain.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-tomatoes-US-bls",
+      "itemId": "tomatoes",
+      "areaId": "US",
+      "price": 1.992,
+      "currency": "USD",
+      "grain": "country",
+      "source": "U.S. Bureau of Labor Statistics",
+      "series": "CPI Average Price Data, U.S. city average, September 2026",
+      "sourceUrl": "https://alfred.stlouisfed.org/release?rd=2026-10-14&rid=454",
+      "period": "2026-09",
+      "licenceNote": "US government work, public domain.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-chicken-whole-US-bls",
+      "itemId": "chicken-whole",
+      "areaId": "US",
+      "price": 2.064,
+      "currency": "USD",
+      "grain": "country",
+      "source": "U.S. Bureau of Labor Statistics",
+      "series": "CPI Average Price Data, U.S. city average, September 2026",
+      "sourceUrl": "https://alfred.stlouisfed.org/release?rd=2026-10-14&rid=454",
+      "period": "2026-09",
+      "licenceNote": "US government work, public domain.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-pms-GB-rac",
+      "itemId": "pms",
+      "areaId": "GB",
+      "price": 1.6845,
+      "currency": "GBP",
+      "grain": "country",
+      "source": "RAC Fuel Watch, as reported by PetrolPrices.co.uk",
+      "series": "UK average pump price, 10 November 2026",
+      "sourceUrl": "https://www.petrolprices.co.uk/oil-below-90-petrol-10p-cut-due-november-2026.php",
+      "period": "2026-11",
+      "licenceNote": "Cited figure from a press report.",
+      "retrieved": "2026-11-12",
+      "note": "Pounds per litre (168.45p)."
+    },
+    {
+      "id": "ref-pms-GB-BELFAST-findpetrol",
+      "itemId": "pms",
+      "areaId": "GB-BELFAST",
+      "price": 1.627,
+      "currency": "GBP",
+      "grain": "city",
+      "source": "findpetrol.co.uk UK Fuel Price Index (Open Government Licence data)",
+      "series": "Monthly Fuel Price Report, November 2026 (provisional)",
+      "sourceUrl": "https://www.findpetrol.co.uk/uk-fuel-price-index/monthly/2026-11.pdf",
+      "period": "2026-11",
+      "licenceNote": "Free to cite with attribution; underlying data OGL v3.0.",
+      "retrieved": "2026-11-12",
+      "note": "Pounds per litre (162.7p), provisional month."
+    },
+    {
+      "id": "ref-pms-GB-HIGHLANDS-findpetrol",
+      "itemId": "pms",
+      "areaId": "GB-HIGHLANDS",
+      "price": 1.743,
+      "currency": "GBP",
+      "grain": "region",
+      "source": "findpetrol.co.uk UK Fuel Price Index (Open Government Licence data)",
+      "series": "Monthly Fuel Price Report, November 2026 (provisional)",
+      "sourceUrl": "https://www.findpetrol.co.uk/uk-fuel-price-index/monthly/2026-11.pdf",
+      "period": "2026-11",
+      "licenceNote": "Free to cite with attribution; underlying data OGL v3.0.",
+      "retrieved": "2026-11-12",
+      "note": "Pounds per litre (174.3p), provisional month."
+    },
+    {
+      "id": "ref-bread-white-GB-ons",
+      "itemId": "bread-white",
+      "areaId": "GB",
+      "price": 1.33,
+      "currency": "GBP",
+      "grain": "country",
+      "source": "Office for National Statistics, shopping prices comparison tool (via UK in Data)",
+      "series": "Average shop prices, September 2026",
+      "sourceUrl": "https://www.uk-data.app/chart/shopping-prices/",
+      "period": "2026-09",
+      "licenceNote": "ONS data under the Open Government Licence v3.0.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-eggs-dozen-GB-ons",
+      "itemId": "eggs-dozen",
+      "areaId": "GB",
+      "price": 3.95,
+      "currency": "GBP",
+      "grain": "country",
+      "source": "Office for National Statistics, shopping prices comparison tool (via UK in Data)",
+      "series": "Average shop prices, September 2026",
+      "sourceUrl": "https://www.uk-data.app/chart/shopping-prices/",
+      "period": "2026-09",
+      "licenceNote": "ONS data under the Open Government Licence v3.0.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-tomatoes-GB-ons",
+      "itemId": "tomatoes",
+      "areaId": "GB",
+      "price": 4.0,
+      "currency": "GBP",
+      "grain": "country",
+      "source": "Office for National Statistics, shopping prices comparison tool (via UK in Data)",
+      "series": "Average shop prices, September 2026",
+      "sourceUrl": "https://www.uk-data.app/chart/shopping-prices/",
+      "period": "2026-09",
+      "licenceNote": "ONS data under the Open Government Licence v3.0.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-sugar-GB-ons",
+      "itemId": "sugar",
+      "areaId": "GB",
+      "price": 1.15,
+      "currency": "GBP",
+      "grain": "country",
+      "source": "Office for National Statistics, shopping prices comparison tool (via UK in Data)",
+      "series": "Average shop prices, September 2026",
+      "sourceUrl": "https://www.uk-data.app/chart/shopping-prices/",
+      "period": "2026-09",
+      "licenceNote": "ONS data under the Open Government Licence v3.0.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-chicken-whole-GB-ons",
+      "itemId": "chicken-whole",
+      "areaId": "GB",
+      "price": 4.51,
+      "currency": "GBP",
+      "grain": "country",
+      "source": "Office for National Statistics, shopping prices comparison tool (via UK in Data)",
+      "series": "Average shop prices, September 2026",
+      "sourceUrl": "https://www.uk-data.app/chart/shopping-prices/",
+      "period": "2026-09",
+      "licenceNote": "ONS data under the Open Government Licence v3.0.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-pms-IN-DELHI-iocl",
+      "itemId": "pms",
+      "areaId": "IN-DELHI",
+      "price": 102.12,
+      "currency": "INR",
+      "grain": "city",
+      "source": "Indian Oil Corporation price buildup and city rates (via Livemint/HDFC Sky)",
+      "series": "Retail selling price, 12 November 2026",
+      "sourceUrl": "https://hdfcsky.com/news/petrol-diesel-prices-today-november-12-2026-check-latest-rates-in-delhi-mumbai-chennai-kolkata-bengaluru-and-other-cities",
+      "period": "2026-11",
+      "licenceNote": "Cited figure from public price lists.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-pms-IN-MUMBAI-iocl",
+      "itemId": "pms",
+      "areaId": "IN-MUMBAI",
+      "price": 111.21,
+      "currency": "INR",
+      "grain": "city",
+      "source": "Indian Oil Corporation price buildup and city rates (via Livemint/HDFC Sky)",
+      "series": "Retail selling price, 12 November 2026",
+      "sourceUrl": "https://hdfcsky.com/news/petrol-diesel-prices-today-november-12-2026-check-latest-rates-in-delhi-mumbai-chennai-kolkata-bengaluru-and-other-cities",
+      "period": "2026-11",
+      "licenceNote": "Cited figure from public price lists.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-pms-IN-KOLKATA-iocl",
+      "itemId": "pms",
+      "areaId": "IN-KOLKATA",
+      "price": 113.51,
+      "currency": "INR",
+      "grain": "city",
+      "source": "Indian Oil Corporation price buildup and city rates (via Livemint/HDFC Sky)",
+      "series": "Retail selling price, 12 November 2026",
+      "sourceUrl": "https://hdfcsky.com/news/petrol-diesel-prices-today-november-12-2026-check-latest-rates-in-delhi-mumbai-chennai-kolkata-bengaluru-and-other-cities",
+      "period": "2026-11",
+      "licenceNote": "Cited figure from public price lists.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-pms-IN-CHENNAI-iocl",
+      "itemId": "pms",
+      "areaId": "IN-CHENNAI",
+      "price": 107.76,
+      "currency": "INR",
+      "grain": "city",
+      "source": "Indian Oil Corporation price buildup and city rates (via Livemint/HDFC Sky)",
+      "series": "Retail selling price, 12 November 2026",
+      "sourceUrl": "https://hdfcsky.com/news/petrol-diesel-prices-today-november-12-2026-check-latest-rates-in-delhi-mumbai-chennai-kolkata-bengaluru-and-other-cities",
+      "period": "2026-11",
+      "licenceNote": "Cited figure from public price lists.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-pms-IN-BENGALURU-iocl",
+      "itemId": "pms",
+      "areaId": "IN-BENGALURU",
+      "price": 111.68,
+      "currency": "INR",
+      "grain": "city",
+      "source": "Indian Oil Corporation price buildup and city rates (via Livemint/HDFC Sky)",
+      "series": "Retail selling price, 12 November 2026",
+      "sourceUrl": "https://hdfcsky.com/news/petrol-diesel-prices-today-november-12-2026-check-latest-rates-in-delhi-mumbai-chennai-kolkata-bengaluru-and-other-cities",
+      "period": "2026-11",
+      "licenceNote": "Cited figure from public price lists.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-pms-IN-HYDERABAD-iocl",
+      "itemId": "pms",
+      "areaId": "IN-HYDERABAD",
+      "price": 116.15,
+      "currency": "INR",
+      "grain": "city",
+      "source": "Indian Oil Corporation price buildup and city rates (via Livemint/HDFC Sky)",
+      "series": "Retail selling price, 12 November 2026",
+      "sourceUrl": "https://hdfcsky.com/news/petrol-diesel-prices-today-november-12-2026-check-latest-rates-in-delhi-mumbai-chennai-kolkata-bengaluru-and-other-cities",
+      "period": "2026-11",
+      "licenceNote": "Cited figure from public price lists.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-lpg-12kg-IN-DELHI-lpgin",
+      "itemId": "lpg-12kg",
+      "areaId": "IN-DELHI",
+      "price": 942.0,
+      "currency": "INR",
+      "grain": "city",
+      "source": "Oil marketing company domestic LPG refill prices (via SmartFigure)",
+      "series": "14.2 kg domestic cylinder, November 2026",
+      "sourceUrl": "https://smartfigure.in/lpg-price/delhi/new-delhi/",
+      "period": "2026-11",
+      "licenceNote": "Cited figure from public price lists.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-lpg-12kg-IN-MUMBAI-lpgin",
+      "itemId": "lpg-12kg",
+      "areaId": "IN-MUMBAI",
+      "price": 941.5,
+      "currency": "INR",
+      "grain": "city",
+      "source": "Oil marketing company domestic LPG refill prices (via SmartFigure)",
+      "series": "14.2 kg domestic cylinder, November 2026",
+      "sourceUrl": "https://smartfigure.in/lpg-price/delhi/new-delhi/",
+      "period": "2026-11",
+      "licenceNote": "Cited figure from public price lists.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-lpg-12kg-IN-KOLKATA-lpgin",
+      "itemId": "lpg-12kg",
+      "areaId": "IN-KOLKATA",
+      "price": 968.0,
+      "currency": "INR",
+      "grain": "city",
+      "source": "Oil marketing company domestic LPG refill prices (via SmartFigure)",
+      "series": "14.2 kg domestic cylinder, November 2026",
+      "sourceUrl": "https://smartfigure.in/lpg-price/delhi/new-delhi/",
+      "period": "2026-11",
+      "licenceNote": "Cited figure from public price lists.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-lpg-12kg-IN-CHENNAI-lpgin",
+      "itemId": "lpg-12kg",
+      "areaId": "IN-CHENNAI",
+      "price": 957.5,
+      "currency": "INR",
+      "grain": "city",
+      "source": "Oil marketing company domestic LPG refill prices (via SmartFigure)",
+      "series": "14.2 kg domestic cylinder, November 2026",
+      "sourceUrl": "https://smartfigure.in/lpg-price/delhi/new-delhi/",
+      "period": "2026-11",
+      "licenceNote": "Cited figure from public price lists.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-lpg-12kg-IN-BENGALURU-lpgin",
+      "itemId": "lpg-12kg",
+      "areaId": "IN-BENGALURU",
+      "price": 944.5,
+      "currency": "INR",
+      "grain": "city",
+      "source": "Oil marketing company domestic LPG refill prices (via SmartFigure)",
+      "series": "14.2 kg domestic cylinder, November 2026",
+      "sourceUrl": "https://smartfigure.in/lpg-price/delhi/new-delhi/",
+      "period": "2026-11",
+      "licenceNote": "Cited figure from public price lists.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-lpg-12kg-IN-HYDERABAD-lpgin",
+      "itemId": "lpg-12kg",
+      "areaId": "IN-HYDERABAD",
+      "price": 994.0,
+      "currency": "INR",
+      "grain": "city",
+      "source": "Oil marketing company domestic LPG refill prices (via SmartFigure)",
+      "series": "14.2 kg domestic cylinder, November 2026",
+      "sourceUrl": "https://smartfigure.in/lpg-price/delhi/new-delhi/",
+      "period": "2026-11",
+      "licenceNote": "Cited figure from public price lists.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-pms-KE-knbs",
+      "itemId": "pms",
+      "areaId": "KE",
+      "price": 227.85,
+      "currency": "KES",
+      "grain": "country",
+      "source": "Kenya National Bureau of Statistics (via The Kenya Times)",
+      "series": "CPI average retail prices, October 2026",
+      "sourceUrl": "https://thekenyatimes.com/economy/headache-for-kenyans-as-prices-of-essential-commodities-hike/",
+      "period": "2026-10",
+      "licenceNote": "Cited figure from a press report of official statistics.",
+      "retrieved": "2026-11-12",
+      "note": "National average retail price."
+    },
+    {
+      "id": "ref-pms-KE-NAIROBI-epra",
+      "itemId": "pms",
+      "areaId": "KE-NAIROBI",
+      "price": 226.96,
+      "currency": "KES",
+      "grain": "city",
+      "source": "Energy and Petroleum Regulatory Authority, Kenya",
+      "series": "Maximum retail pump prices, 15 Oct to 14 Nov 2026",
+      "sourceUrl": "https://www.epra.go.ke/pump-prices",
+      "period": "2026-10",
+      "licenceNote": "Published regulatory maximum prices.",
+      "retrieved": "2026-11-12",
+      "note": "Regulated maximum, not an average."
+    },
+    {
+      "id": "ref-pms-KE-MOMBASA-epra",
+      "itemId": "pms",
+      "areaId": "KE-MOMBASA",
+      "price": 223.81,
+      "currency": "KES",
+      "grain": "city",
+      "source": "Energy and Petroleum Regulatory Authority, Kenya",
+      "series": "Maximum retail pump prices, 15 Oct to 14 Nov 2026",
+      "sourceUrl": "https://www.epra.go.ke/pump-prices",
+      "period": "2026-10",
+      "licenceNote": "Published regulatory maximum prices.",
+      "retrieved": "2026-11-12",
+      "note": "Regulated maximum, not an average."
+    },
+    {
+      "id": "ref-pms-KE-KISUMU-epra",
+      "itemId": "pms",
+      "areaId": "KE-KISUMU",
+      "price": 226.51,
+      "currency": "KES",
+      "grain": "city",
+      "source": "Energy and Petroleum Regulatory Authority, Kenya",
+      "series": "Maximum retail pump prices, 15 Oct to 14 Nov 2026",
+      "sourceUrl": "https://www.epra.go.ke/pump-prices",
+      "period": "2026-10",
+      "licenceNote": "Published regulatory maximum prices.",
+      "retrieved": "2026-11-12",
+      "note": "Regulated maximum, not an average."
+    },
+    {
+      "id": "ref-pms-KE-NAKURU-epra",
+      "itemId": "pms",
+      "areaId": "KE-NAKURU",
+      "price": 225.73,
+      "currency": "KES",
+      "grain": "city",
+      "source": "Energy and Petroleum Regulatory Authority, Kenya",
+      "series": "Maximum retail pump prices, 15 Oct to 14 Nov 2026",
+      "sourceUrl": "https://www.epra.go.ke/pump-prices",
+      "period": "2026-10",
+      "licenceNote": "Published regulatory maximum prices.",
+      "retrieved": "2026-11-12",
+      "note": "Regulated maximum, not an average."
+    },
+    {
+      "id": "ref-sugar-KE-knbs",
+      "itemId": "sugar",
+      "areaId": "KE",
+      "price": 163.84,
+      "currency": "KES",
+      "grain": "country",
+      "source": "Kenya National Bureau of Statistics (via The Kenya Times)",
+      "series": "CPI average retail prices, October 2026",
+      "sourceUrl": "https://thekenyatimes.com/economy/headache-for-kenyans-as-prices-of-essential-commodities-hike/",
+      "period": "2026-10",
+      "licenceNote": "Cited figure from a press report of official statistics.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-wheat-flour-KE-knbs",
+      "itemId": "wheat-flour",
+      "areaId": "KE",
+      "price": 184.88,
+      "currency": "KES",
+      "grain": "country",
+      "source": "Kenya National Bureau of Statistics (via The Kenya Times)",
+      "series": "CPI average retail prices, October 2026",
+      "sourceUrl": "https://thekenyatimes.com/economy/headache-for-kenyans-as-prices-of-essential-commodities-hike/",
+      "period": "2026-10",
+      "licenceNote": "Cited figure from a press report of official statistics.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-lpg-12kg-KE-knbs",
+      "itemId": "lpg-12kg",
+      "areaId": "KE",
+      "price": 3429.61,
+      "currency": "KES",
+      "grain": "country",
+      "source": "Kenya National Bureau of Statistics (via The Kenya Times)",
+      "series": "CPI average retail prices, October 2026",
+      "sourceUrl": "https://thekenyatimes.com/economy/headache-for-kenyans-as-prices-of-essential-commodities-hike/",
+      "period": "2026-10",
+      "licenceNote": "Cited figure from a press report of official statistics.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-milk-KE-knbs",
+      "itemId": "milk",
+      "areaId": "KE",
+      "price": 80.58,
+      "currency": "KES",
+      "grain": "country",
+      "source": "Kenya National Bureau of Statistics (via The Kenya Times)",
+      "series": "CPI average retail prices, October 2026",
+      "sourceUrl": "https://thekenyatimes.com/economy/headache-for-kenyans-as-prices-of-essential-commodities-hike/",
+      "period": "2026-10",
+      "licenceNote": "Cited figure from a press report of official statistics.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-pms-BR-anpm",
+      "itemId": "pms",
+      "areaId": "BR",
+      "price": 6.51,
+      "currency": "BRL",
+      "grain": "country",
+      "source": "Agência Nacional do Petróleo (ANP), monthly price survey (via Brasil Medido)",
+      "series": "Gasolina comum, preço médio mensal, outubro 2026",
+      "sourceUrl": "https://brasilmedido.vercel.app/indicadores/gasolina-comum",
+      "period": "2026-10",
+      "licenceNote": "Brazilian public data.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-pms-BR-BRASILIA-anpw",
+      "itemId": "pms",
+      "areaId": "BR-BRASILIA",
+      "price": 6.39,
+      "currency": "BRL",
+      "grain": "city",
+      "source": "Agência Nacional do Petróleo (ANP), weekly synthesis",
+      "series": "Síntese semanal 43/2026, 18 to 24 Oct 2026",
+      "sourceUrl": "https://www.gov.br/anp/pt-br/assuntos/precos-e-defesa-da-concorrencia/precos/arq-sintese-semanal/2026/sintese-precos-43.pdf",
+      "period": "2026-10",
+      "licenceNote": "Brazilian public data.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-pms-BR-MANAUS-anpw",
+      "itemId": "pms",
+      "areaId": "BR-MANAUS",
+      "price": 6.97,
+      "currency": "BRL",
+      "grain": "city",
+      "source": "Agência Nacional do Petróleo (ANP), weekly synthesis",
+      "series": "Síntese semanal 43/2026, 18 to 24 Oct 2026",
+      "sourceUrl": "https://www.gov.br/anp/pt-br/assuntos/precos-e-defesa-da-concorrencia/precos/arq-sintese-semanal/2026/sintese-precos-43.pdf",
+      "period": "2026-10",
+      "licenceNote": "Brazilian public data.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-pms-BR-PALMAS-anpw",
+      "itemId": "pms",
+      "areaId": "BR-PALMAS",
+      "price": 7.07,
+      "currency": "BRL",
+      "grain": "city",
+      "source": "Agência Nacional do Petróleo (ANP), weekly synthesis",
+      "series": "Síntese semanal 43/2026, 18 to 24 Oct 2026",
+      "sourceUrl": "https://www.gov.br/anp/pt-br/assuntos/precos-e-defesa-da-concorrencia/precos/arq-sintese-semanal/2026/sintese-precos-43.pdf",
+      "period": "2026-10",
+      "licenceNote": "Brazilian public data.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-pms-BR-VITORIA-anpw",
+      "itemId": "pms",
+      "areaId": "BR-VITORIA",
+      "price": 6.24,
+      "currency": "BRL",
+      "grain": "city",
+      "source": "Agência Nacional do Petróleo (ANP), weekly synthesis",
+      "series": "Síntese semanal 43/2026, 18 to 24 Oct 2026",
+      "sourceUrl": "https://www.gov.br/anp/pt-br/assuntos/precos-e-defesa-da-concorrencia/precos/arq-sintese-semanal/2026/sintese-precos-43.pdf",
+      "period": "2026-10",
+      "licenceNote": "Brazilian public data.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-pms-BR-NATAL-anpw",
+      "itemId": "pms",
+      "areaId": "BR-NATAL",
+      "price": 6.82,
+      "currency": "BRL",
+      "grain": "city",
+      "source": "Agência Nacional do Petróleo (ANP), weekly synthesis",
+      "series": "Síntese semanal 43/2026, 18 to 24 Oct 2026",
+      "sourceUrl": "https://www.gov.br/anp/pt-br/assuntos/precos-e-defesa-da-concorrencia/precos/arq-sintese-semanal/2026/sintese-precos-43.pdf",
+      "period": "2026-10",
+      "licenceNote": "Brazilian public data.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-pms-BR-MACAPA-anpw",
+      "itemId": "pms",
+      "areaId": "BR-MACAPA",
+      "price": 6.3,
+      "currency": "BRL",
+      "grain": "city",
+      "source": "Agência Nacional do Petróleo (ANP), weekly synthesis",
+      "series": "Síntese semanal 43/2026, 18 to 24 Oct 2026",
+      "sourceUrl": "https://www.gov.br/anp/pt-br/assuntos/precos-e-defesa-da-concorrencia/precos/arq-sintese-semanal/2026/sintese-precos-43.pdf",
+      "period": "2026-10",
+      "licenceNote": "Brazilian public data.",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "id": "ref-lpg-12kg-BR-anpglp",
+      "itemId": "lpg-12kg",
+      "areaId": "BR",
+      "price": 114.73,
+      "currency": "BRL",
+      "grain": "country",
+      "source": "Agência Nacional do Petróleo (ANP), weekly survey (via Baratão)",
+      "series": "GLP P-13, 11 to 17 Oct 2026",
+      "sourceUrl": "https://usebaratao.com.br/blog/preco-dos-combustiveis-em-outubro-diesel-sobe-e-etanol-cai/",
+      "period": "2026-10",
+      "licenceNote": "Brazilian public data.",
+      "retrieved": "2026-11-12"
     }
   ],
   "demoObservations": [
@@ -1442,61 +2505,116 @@
       "id": "obs-demo-1",
       "itemId": "tomatoes",
       "areaId": "NG-KANO",
-      "priceNaira": 1240,
+      "price": 1240,
       "source": "demo-seed",
       "status": "accepted",
       "trust": 0.8,
       "deviceHash": "demo-dev-a",
       "tag": "demo",
-      "note": "Scripted confirmation for the demo feedback loop, not a live stall quote."
+      "note": "Scripted confirmation for the demo feedback loop, not a live stall quote.",
+      "currency": "NGN"
     },
     {
       "id": "obs-demo-2",
       "itemId": "tomatoes",
       "areaId": "NG-KANO",
-      "priceNaira": 1260,
+      "price": 1260,
       "source": "demo-seed",
       "status": "accepted",
       "trust": 0.8,
       "deviceHash": "demo-dev-b",
       "tag": "demo",
-      "note": "Scripted confirmation for the demo feedback loop, not a live stall quote."
+      "note": "Scripted confirmation for the demo feedback loop, not a live stall quote.",
+      "currency": "NGN"
     },
     {
       "id": "obs-demo-3",
       "itemId": "tomatoes",
       "areaId": "NG-KANO",
-      "priceNaira": 1285,
+      "price": 1285,
       "source": "demo-seed",
       "status": "accepted",
       "trust": 0.7,
       "deviceHash": "demo-dev-c",
       "tag": "demo",
-      "note": "Scripted confirmation for the demo feedback loop, not a live stall quote."
+      "note": "Scripted confirmation for the demo feedback loop, not a live stall quote.",
+      "currency": "NGN"
     },
     {
       "id": "obs-demo-4",
       "itemId": "pms",
       "areaId": "NG-RIVERS",
-      "priceNaira": 1610,
+      "price": 1610,
       "source": "demo-seed",
       "status": "accepted",
       "trust": 0.8,
       "deviceHash": "demo-dev-d",
       "tag": "demo",
-      "note": "Scripted confirmation around the official May 2026 Rivers average."
+      "note": "Scripted confirmation around the official May 2026 Rivers average.",
+      "currency": "NGN"
     },
     {
       "id": "obs-demo-5",
       "itemId": "pms",
       "areaId": "NG-RIVERS",
-      "priceNaira": 1635,
+      "price": 1635,
       "source": "demo-seed",
       "status": "accepted",
       "trust": 0.7,
       "deviceHash": "demo-dev-e",
       "tag": "demo",
-      "note": "Scripted confirmation around the official May 2026 Rivers average."
+      "note": "Scripted confirmation around the official May 2026 Rivers average.",
+      "currency": "NGN"
+    }
+  ],
+  "countries": [
+    {
+      "code": "NG",
+      "name": "Nigeria",
+      "currency": "NGN",
+      "locale": "en-NG",
+      "units": "metric",
+      "seeded": true
+    },
+    {
+      "code": "US",
+      "name": "United States",
+      "currency": "USD",
+      "locale": "en-US",
+      "units": "imperial",
+      "seeded": true
+    },
+    {
+      "code": "GB",
+      "name": "United Kingdom",
+      "currency": "GBP",
+      "locale": "en-GB",
+      "units": "metric",
+      "seeded": true
+    },
+    {
+      "code": "IN",
+      "name": "India",
+      "currency": "INR",
+      "locale": "en-IN",
+      "units": "metric",
+      "seeded": true
+    },
+    {
+      "code": "KE",
+      "name": "Kenya",
+      "currency": "KES",
+      "locale": "en-KE",
+      "units": "metric",
+      "seeded": true
+    },
+    {
+      "code": "BR",
+      "name": "Brazil",
+      "currency": "BRL",
+      "locale": "pt-BR",
+      "units": "metric",
+      "seeded": true
     }
   ]
 }

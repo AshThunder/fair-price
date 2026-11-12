@@ -93,4 +93,28 @@ create table if not exists tg_sessions (
 );
 `,
   },
+  {
+    // Fair Price goes global: amounts are in the area's own currency, never naira by
+    // assumption. Existing rows were all Nigerian, so they default to NGN.
+    version: "002_global_currency",
+    sql: `
+alter table verdicts rename column quote_naira to quote;
+alter table verdicts add column if not exists currency text not null default 'NGN';
+alter table verdicts add column if not exists country text not null default 'NG';
+
+alter table observations rename column price_naira to price;
+alter table observations add column if not exists currency text not null default 'NGN';
+alter table observations add column if not exists unit text;
+alter table observations add column if not exists item_name text;
+alter table observations add column if not exists verdict_id text;
+create index if not exists observations_item_currency_idx on observations (item_id, currency);
+create index if not exists observations_verdict_idx on observations (verdict_id);
+
+alter table feedback rename column paid_naira to paid;
+alter table feedback add column if not exists currency text not null default 'NGN';
+
+-- What a completed Reppo score did to the trust of the confirmation it scored.
+alter table reppo_evals add column if not exists trust_effect text;
+`,
+  },
 ];

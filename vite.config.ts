@@ -11,7 +11,7 @@ export default defineConfig({
       manifest: {
         name: "Fair Price",
         short_name: "Fair Price",
-        description: "Check whether a stall, pump, or fare price is fair for your area.",
+        description: "A fair price check for anything, anywhere.",
         theme_color: "#1F4E79",
         background_color: "#F6E7C1",
         display: "standalone",

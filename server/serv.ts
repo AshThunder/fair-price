@@ -1,12 +1,13 @@
 import type { CodeVerdict, Item, ServJudgment, Area } from "../shared/types.js";
-import { naira } from "../shared/engine.js";
+import { money } from "../shared/engine.js";
+import { countryName, localeFor } from "../shared/geo.js";
 import { servKey } from "./env.js";
 
 const ENDPOINT = "https://inference-api.openserv.ai/v1/chat/completions";
 const MODEL = "gpt-5.4-mini";
 
-const SYSTEM = `You are the judgment voice for Fair Price, a Nigeria-first price-check tool.
-You receive a dated evidence pack and a code-computed price band. You do not invent prices.
+const SYSTEM = `You are the judgment voice for Fair Price, a fair price check for anything, anywhere.
+You receive the country, currency, a dated evidence pack, and a code-computed price band. You do not invent local prices.
 You only use the evidence in the pack. Official figures are monthly averages, not live stall quotes, and you must say so when you lean on them.
 The code band and code verdict are final. Your job is to explain them and give a practical tip, not to re-judge.
 Copy the code verdict into "verdict" and the code band into range_low and range_high. Every reason and the tip must agree with the code verdict and use only the code band numbers.
@@ -22,7 +23,8 @@ quotes (array of short evidence summaries, max 3),
 negotiation_tip (one short practical sentence, no emojis),
 evidence_ids (array of ids you actually used),
 note (string or null).
-Write naira amounts as whole numbers with the ₦ sign, for example ₦1,350.
+Write amounts in the given currency with its usual symbol, for example ₦1,350, $4.48, £1.68, KSh 227 or R$ 6,51. Never convert between currencies.
+If the pack says there is no local data: verdict must be "uncertain". You may give a cautious rough range from general knowledge of typical prices for this item in this country in range_low and range_high, in the same currency, and say plainly in one reason that it is a rough guess, not local data. The tip should tell the shopper to compare two sellers and confirm what they pay.
 Write for a shopper in plain words. Call the band "the usual range". Never say "code", "band", "evidence pack", or "sample" in reasons, the tip, or the note.
 Do not mention hidden chain-of-thought.`;
 
@@ -70,25 +72,33 @@ function parseJudgment(raw: string, fallback: CodeVerdict, item: Item): ServJudg
   }
 }
 
-async function judgeOnce(args: {
+interface JudgeArgs {
   item: Item;
   area: Area;
   quote: number;
   code: CodeVerdict;
-}): Promise<ServJudgment> {
+  /** Display name and unit for the area's country. */
+  itemName?: string;
+  unit?: string;
+}
+
+async function judgeOnce(args: JudgeArgs): Promise<ServJudgment> {
   const key = servKey();
   if (!key) throw new ServUnavailableError("SERV key is not configured.");
 
   const { item, area, quote, code } = args;
-  const r = (n: number | null | undefined) => (typeof n === "number" ? String(Math.round(n)) : "none");
-  const evidence = code.range.points
-    .map((p) => `${p.id}: ${p.kind} ${Math.round(p.priceNaira)} naira — ${p.label}`)
-    .join("\n");
+  const cur = area.currency;
+  const fmt = (n: number) => money(n, cur, localeFor(area.country));
+  const r = (n: number | null | undefined) => (typeof n === "number" ? fmt(n) : "none");
+  const evidence = code.range.points.map((p) => `${p.id}: ${p.kind} ${fmt(p.price)} — ${p.label}`).join("\n");
   const user = [
-    `Item: ${item.name} (${item.id}), unit ${item.unit}, category ${item.category}.`,
+    `Item: ${args.itemName ?? item.name} (${item.id}), unit ${args.unit ?? item.unit}, category ${item.category}${item.custom ? ", typed by the shopper" : ""}.`,
+    `Country: ${countryName(area.country)} (${area.country}). Currency: ${cur}.`,
     `Area: ${area.name} (${area.id}), kind ${area.kind}.`,
-    `Quoted price: ${quote} naira (${naira(quote)}).`,
-    `Code band (naira, rounded): mid ${r(code.range.mid)}, low ${r(code.range.low)}, high ${r(code.range.high)}, fallback ${code.range.fallback}, samples ${code.range.sampleSize}.`,
+    `Quoted price: ${fmt(quote)}.`,
+    code.range.mid == null
+      ? `There is no local data for this item here yet. Code verdict is uncertain.`
+      : `Code band: mid ${r(code.range.mid)}, low ${r(code.range.low)}, high ${r(code.range.high)}, fallback ${code.range.fallback}, samples ${code.range.sampleSize}.`,
     `Code verdict: ${code.label}. Reasons: ${code.reasonCodes.join(", ")}.`,
     `Evidence pack:`,
     evidence || "(none)",
@@ -131,7 +141,7 @@ async function judgeOnce(args: {
 }
 
 /** One retry when SERV answers but the reply is empty or not valid JSON (seen occasionally in live runs). */
-export async function judgeWithServ(args: { item: Item; area: Area; quote: number; code: CodeVerdict }): Promise<ServJudgment> {
+export async function judgeWithServ(args: JudgeArgs): Promise<ServJudgment> {
   try {
     return await judgeOnce(args);
   } catch (err) {
