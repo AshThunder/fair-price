@@ -39,3 +39,62 @@ describe("judgeWithServ", () => {
     await expect(judgeWithServ({ item, area, quote: 1400, code })).rejects.toBeInstanceOf(ServUnavailableError);
   });
 });
+
+describe("/api/check when SERV disagrees with the band", () => {
+  it("keeps the band's label, drops SERV's contradicting text, and shows its note", async () => {
+    const { default: app } = await import("../server/app.js");
+    process.env.OPENSERV_API_KEY = "test-key";
+    const content = JSON.stringify({
+      verdict: "fair",
+      confidence: "high",
+      reasons: ["This price is perfectly fair."],
+      quotes: [],
+      negotiation_tip: "Pay it.",
+      evidence_ids: [],
+      note: "The only anchor is a monthly average and Kano stall prices rose this week.",
+    });
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { content } }] }), { status: 200 })));
+    const res = await app.request("/api/check", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ itemId: "tomatoes", areaId: "NG-KANO", quoteNaira: 2500, deviceId: "t-serv-disagree", demo: false }),
+    });
+    const { verdict } = (await res.json()) as { verdict: Record<string, any> };
+    expect(verdict.label).toBe("high");
+    expect(verdict.quoteNaira).toBeGreaterThan(verdict.high);
+    expect(verdict.reasons.join(" ")).not.toMatch(/perfectly fair/);
+    expect(verdict.tip).not.toBe("Pay it.");
+    expect(verdict.note).toMatch(/monthly average/);
+    expect(verdict.servAvailable).toBe(true);
+  });
+
+  it("uses SERV's reasons and tip when it agrees", async () => {
+    const { default: app } = await import("../server/app.js");
+    process.env.OPENSERV_API_KEY = "test-key";
+    const content = JSON.stringify({ verdict: "high", confidence: "medium", reasons: ["Above the Kano band."], quotes: [], negotiation_tip: "Offer the middle of the band.", evidence_ids: [], note: null });
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { content } }] }), { status: 200 })));
+    const res = await app.request("/api/check", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ itemId: "tomatoes", areaId: "NG-KANO", quoteNaira: 2500, deviceId: "t-serv-agree", demo: false }),
+    });
+    const { verdict } = (await res.json()) as { verdict: Record<string, any> };
+    expect(verdict.label).toBe("high");
+    expect(verdict.reasons).toContain("Above the Kano band.");
+    expect(verdict.tip).toBe("Offer the middle of the band.");
+    expect(verdict.note).toBeNull();
+  });
+});
+
+describe("judgeWithServ retry", () => {
+  it("retries once when the reply is unreadable", async () => {
+    process.env.OPENSERV_API_KEY = "test-key";
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const replies = ["", '{"verdict":"high","reasons":[],"negotiation_tip":"x"}'];
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { content: replies.shift() } }] }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const j = await judgeWithServ({ item, area, quote: 1400, code });
+    expect(j.verdict).toBe("high");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});

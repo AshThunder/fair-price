@@ -9,6 +9,7 @@ import {
   codeVerdict,
   deviceHash,
   hardRulesOverride,
+  reconcileVerdict,
   isOutlier,
   median,
   naira,
@@ -206,6 +207,51 @@ describe("hard rules", () => {
     const rice = seed.items.find((i) => i.id === "rice-local")!;
     const range = buildRange("rice-local", "NG", seed.officialRefs, [], seed.areas, asOf);
     expect(hardRulesOverride(rice, -3, range, null).label).toBe("uncertain");
+  });
+});
+
+describe("reconcileVerdict", () => {
+  const rice = seed.items.find((i) => i.id === "rice-local")!;
+  const range = buildRange("rice-local", "NG", seed.officialRefs, [], seed.areas, asOf, { seedOnly: true });
+  const serv = (verdict: "fair" | "high" | "low" | "uncertain", note: string | null = null) => ({
+    verdict,
+    range_low: range.low,
+    range_high: range.high,
+    unit: rice.unit,
+    confidence: "high" as const,
+    reasons: ["From SERV"],
+    quotes: [],
+    negotiation_tip: "SERV tip",
+    evidence_ids: [],
+    note,
+  });
+
+  it("always takes the label from where the quote sits in the band", () => {
+    for (const quote of [range.low! * 0.5, range.mid!, range.high! * 1.5]) {
+      for (const v of ["fair", "high", "low", "uncertain"] as const) {
+        expect(reconcileVerdict(quote, range, serv(v)).label).toBe(classifyQuote(quote, range));
+      }
+    }
+  });
+
+  it("uses SERV text only when SERV agrees", () => {
+    const agree = reconcileVerdict(range.mid!, range, serv("fair"));
+    expect(agree).toMatchObject({ label: "fair", useServText: true, note: null });
+    const disagree = reconcileVerdict(range.mid!, range, serv("high"));
+    expect(disagree).toMatchObject({ label: "fair", useServText: false, note: null });
+  });
+
+  it("keeps a specific SERV disagreement as a note without changing the label", () => {
+    const r = reconcileVerdict(range.mid!, range, serv("high", "The only anchor is five months old and prices rose since."));
+    expect(r.label).toBe("fair");
+    expect(r.note).toMatch(/five months old/);
+    expect(reconcileVerdict(range.mid!, range, serv("high", "none")).note).toBeNull();
+  });
+
+  it("is uncertain with no band, whatever SERV says", () => {
+    const empty = buildRange("phone-screen", "NG-ABUJA", seed.officialRefs, [], seed.areas, asOf);
+    expect(empty.mid).toBeNull();
+    expect(reconcileVerdict(25000, empty, serv("fair")).label).toBe("uncertain");
   });
 });
 

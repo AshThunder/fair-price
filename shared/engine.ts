@@ -273,34 +273,53 @@ export function codeVerdict(
   return { label, range, reasonCodes };
 }
 
+export interface Reconciled {
+  label: VerdictLabel;
+  reasons: string[];
+  /** True when SERV's reasons and tip agree with the final label and can be shown. */
+  useServText: boolean;
+  /** SERV's specific disagreement, shown as "Ada's note". */
+  note: string | null;
+}
+
+function cleanNote(note: unknown): string | null {
+  if (typeof note !== "string") return null;
+  const t = note.replace(/\s+/g, " ").trim();
+  if (t.length < 12 || /^(none|null|n\/a|no note)\.?$/i.test(t)) return null;
+  return t.length > 220 ? `${t.slice(0, 217).trimEnd()}...` : t;
+}
+
+/**
+ * The code band is authoritative: the label always comes from where the quote sits
+ * in the computed range, so the stamp, the range bar, and the text agree. SERV explains
+ * and writes the tip. When SERV's verdict differs, its reasons and tip are dropped and
+ * any specific reason it gave is kept only as a note.
+ */
+export function reconcileVerdict(quote: number, range: RangeResult, serv: ServJudgment | null): Reconciled {
+  if (quote <= 0 || !Number.isFinite(quote)) {
+    return { label: "uncertain", reasons: ["The quoted amount is not a usable price."], useServText: false, note: null };
+  }
+  const label: VerdictLabel = range.mid == null ? "uncertain" : classifyQuote(quote, range);
+  const reasons: string[] = [];
+  if (range.mid == null) reasons.push("There is not enough dated evidence for this item in this area yet.");
+  if (!serv) {
+    if (range.mid != null) reasons.push("The judgment service is unavailable, so this result uses the local price band only.");
+    return { label, reasons, useServText: false, note: null };
+  }
+  const agrees = serv.verdict === label;
+  const note = cleanNote(serv.note);
+  return { label, reasons, useServText: agrees, note: agrees ? null : note };
+}
+
+/** Kept for older callers: the label from reconcileVerdict. */
 export function hardRulesOverride(
   _item: Item,
   quote: number,
   range: RangeResult,
   serv: ServJudgment | null,
 ): { label: VerdictLabel; reasons: string[] } {
-  const reasons: string[] = [];
-  if (quote <= 0 || !Number.isFinite(quote)) {
-    return { label: "uncertain", reasons: ["The quoted amount is not a usable price."] };
-  }
-  if (range.mid == null) {
-    reasons.push("There is not enough dated evidence for this item in this area yet.");
-    return { label: "uncertain", reasons };
-  }
-  const codeLabel = classifyQuote(quote, range);
-  if (!serv) {
-    reasons.push("The judgment service is unavailable, so this result uses the local price band only.");
-    return { label: codeLabel, reasons };
-  }
-  // SERV may not invent a number outside the evidence pack. If SERV's verdict
-  // disagrees with a well-supported code band, keep the code band and note it.
-  const backed = range.officialCount > 0 || range.sampleSize >= 2;
-  const disagreement = serv.verdict !== codeLabel && codeLabel !== "uncertain" && backed;
-  if (disagreement && (serv.confidence === "low" || range.officialCount > 0 || range.observationCount >= 2)) {
-    reasons.push("The local price band was kept because it is backed by dated official anchors or confirmed payments.");
-    return { label: codeLabel, reasons };
-  }
-  return { label: serv.verdict, reasons };
+  const r = reconcileVerdict(quote, range, serv);
+  return { label: r.label, reasons: r.reasons };
 }
 
 export function defaultTip(label: VerdictLabel, item: Item, range: RangeResult, quote: number): string {

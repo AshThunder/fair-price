@@ -266,6 +266,7 @@ async function maybeCapturePrice(chatId: number, s: ChatSession, text: string) {
       high: number | null;
       reasons: string[];
       tip: string;
+      note?: string | null;
     };
   };
   if (!response.ok || !body.verdict) {
@@ -287,6 +288,7 @@ async function maybeCapturePrice(chatId: number, s: ChatSession, text: string) {
     v.reasons.join("\n"),
     "",
     `Tip: ${v.tip}`,
+    ...(v.note ? ["", `Ada's note: ${v.note} The verdict still follows the price range.`] : []),
     "",
     `If you paid, send the amount, for example: paid ${Math.round(v.quoteNaira)}`,
   ].join("\n");

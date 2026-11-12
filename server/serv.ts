@@ -8,8 +8,11 @@ const MODEL = "gpt-5.4-mini";
 const SYSTEM = `You are the judgment voice for Fair Price, a Nigeria-first price-check tool.
 You receive a dated evidence pack and a code-computed price band. You do not invent prices.
 You only use the evidence in the pack. Official figures are monthly averages, not live stall quotes, and you must say so when you lean on them.
+The code band and code verdict are final. Your job is to explain them and give a practical tip, not to re-judge.
+Copy the code verdict into "verdict" and the code band into range_low and range_high. Every reason and the tip must agree with the code verdict and use only the code band numbers.
+If you have a specific, evidence-based reason to think the band is misleading for this quote (for example the only anchor is old, or the unit looks wrong), still copy the code verdict, and put that reason in "note" as one short sentence. Otherwise set "note" to null.
 Return a single JSON object with keys:
-verdict (fair|high|low|uncertain),
+verdict (fair|high|low|uncertain, the code verdict),
 range_low (number or null),
 range_high (number or null),
 unit (string),
@@ -17,8 +20,8 @@ confidence (low|medium|high),
 reasons (array of short plain sentences, no emojis, max 3),
 quotes (array of short evidence summaries, max 3),
 negotiation_tip (one short practical sentence, no emojis),
-evidence_ids (array of ids you actually used).
-If evidence is thin, dated, or missing, verdict must be uncertain.
+evidence_ids (array of ids you actually used),
+note (string or null).
 Write naira amounts as whole numbers with the ₦ sign, for example ₦1,350.
 Do not mention hidden chain-of-thought.`;
 
@@ -49,13 +52,14 @@ function parseJudgment(raw: string, fallback: CodeVerdict, item: Item): ServJudg
       quotes: Array.isArray(parsed.quotes) ? parsed.quotes.map(String).slice(0, 3) : [],
       negotiation_tip: typeof parsed.negotiation_tip === "string" ? parsed.negotiation_tip : "",
       evidence_ids: Array.isArray(parsed.evidence_ids) ? parsed.evidence_ids.map(String) : [],
+      note: typeof parsed.note === "string" ? parsed.note : null,
     };
   } catch {
     return null;
   }
 }
 
-export async function judgeWithServ(args: {
+async function judgeOnce(args: {
   item: Item;
   area: Area;
   quote: number;
@@ -108,6 +112,19 @@ export async function judgeWithServ(args: {
   };
   const content = body.choices?.[0]?.message?.content ?? "";
   const parsed = parseJudgment(content, code, item);
-  if (!parsed) throw new ServUnavailableError("SERV returned an unreadable judgment.");
+  if (!parsed) {
+    console.warn(`SERV unreadable judgment: ${JSON.stringify(content.slice(0, 400))}`);
+    throw new ServUnavailableError("SERV returned an unreadable judgment.");
+  }
   return parsed;
+}
+
+/** One retry when SERV answers but the reply is empty or not valid JSON (seen occasionally in live runs). */
+export async function judgeWithServ(args: { item: Item; area: Area; quote: number; code: CodeVerdict }): Promise<ServJudgment> {
+  try {
+    return await judgeOnce(args);
+  } catch (err) {
+    if (err instanceof ServUnavailableError && /unreadable/.test(err.message)) return judgeOnce(args);
+    throw err;
+  }
 }

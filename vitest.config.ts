@@ -15,5 +15,6 @@ export default defineConfig({
       FAIRPRICE_TELEGRAM_BOT_TOKEN: "",
     },
     testTimeout: 20000,
+    hookTimeout: 30000,
   },
 });

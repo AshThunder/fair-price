@@ -36,6 +36,7 @@ export interface PublicVerdict {
   reasons: string[];
   quotes: string[];
   tip: string;
+  note: string | null;
   confidence: "low" | "medium" | "high";
   servAvailable: boolean;
   servError: string | null;

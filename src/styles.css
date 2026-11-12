@@ -229,6 +229,8 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .reasons { margin: 0 0 12px; padding-left: 20px; display: grid; gap: 4px; }
 .reasons li::marker { color: var(--ink); }
 .tip { background: var(--sun); border: var(--outline); border-radius: var(--r-md); padding: 12px; display: grid; gap: 4px; }
+.ada-note { margin-top: 12px; background: #fff; border: 2.5px dashed var(--ink); border-radius: var(--r-md); padding: 12px; display: grid; gap: 4px; }
+.ada-note-foot { font-size: 0.875rem; color: var(--muted); }
 .tip-title { font-family: "Baloo 2", sans-serif; font-weight: 700; font-size: 1.05rem; }
 
 .reppo { margin: 12px 0 0; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.95rem; }

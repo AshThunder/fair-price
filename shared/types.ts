@@ -132,6 +132,8 @@ export interface ServJudgment {
   quotes: string[];
   negotiation_tip: string;
   evidence_ids: string[];
+  /** Set only when SERV disagrees with the code verdict for a specific reason. Shown as "Ada's note". */
+  note?: string | null;
 }
 
 export interface StoredVerdict {
@@ -145,6 +147,8 @@ export interface StoredVerdict {
   servError?: string;
   final: VerdictLabel;
   tip: string;
+  /** SERV's flagged disagreement with the band, if any. Never changes the label. */
+  note?: string | null;
   reasons: string[];
   quotes: string[];
   confidence: "low" | "medium" | "high";

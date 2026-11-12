@@ -238,6 +238,14 @@ export function VerdictCard({ verdict, demo, onUpdated }: { verdict: PublicVerdi
         <p>{verdict.tip}</p>
       </div>
 
+      {verdict.note ? (
+        <aside className="ada-note" aria-label="Ada's note">
+          <p className="tip-title">Ada's note</p>
+          <p>{verdict.note}</p>
+          <p className="ada-note-foot">The verdict above still follows the price range.</p>
+        </aside>
+      ) : null}
+
       <ReppoBadge reppo={verdict.reppo} confirmed={confirmed} demo={verdict.demo} />
 
       <details className="evidence">

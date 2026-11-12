@@ -7,7 +7,7 @@ import {
   defaultTip,
   deviceHash,
   DUPLICATE_WINDOW_MS,
-  hardRulesOverride,
+  reconcileVerdict,
   naira,
 } from "../shared/engine.js";
 import { runBenchmark, type BenchmarkReport } from "../shared/benchmark.js";
@@ -178,11 +178,13 @@ app.post("/api/check", async (c) => {
   }
   const servMs = Date.now() - servStarted;
 
-  const hard = hardRulesOverride(item, quote, code.range, serv);
-  const final = hard.label;
-  const tip = (serv?.negotiation_tip && serv.negotiation_tip.trim()) || defaultTip(final, item, code.range, quote);
-  const reasons = composeReasons(final, item.name, area.name, area.kind, code, serv?.reasons ?? [], hard.reasons);
-  const quotes = serv?.quotes?.length ? serv.quotes : code.range.points.slice(0, 3).map((p) => `${p.label}: ${naira(p.priceNaira)}`);
+  // The code band decides the label; SERV text is only used when it agrees with it.
+  const rec = reconcileVerdict(quote, code.range, serv);
+  const final = rec.label;
+  const servText = rec.useServText ? serv : null;
+  const tip = (servText?.negotiation_tip && servText.negotiation_tip.trim()) || defaultTip(final, item, code.range, quote);
+  const reasons = composeReasons(final, item.name, area.name, area.kind, code, servText?.reasons ?? [], rec.reasons);
+  const quotes = servText?.quotes?.length ? servText.quotes : code.range.points.slice(0, 3).map((p) => `${p.label}: ${naira(p.priceNaira)}`);
 
   const stored: StoredVerdict = {
     id: `v-${randomUUID()}`,
@@ -195,9 +197,10 @@ app.post("/api/check", async (c) => {
     servError,
     final,
     tip,
+    note: rec.note,
     reasons,
     quotes,
-    confidence: serv?.confidence ?? (code.label === "uncertain" ? "low" : "medium"),
+    confidence: servText?.confidence ?? (code.label === "uncertain" ? "low" : "medium"),
     createdAt: new Date().toISOString(),
     demo,
   };
@@ -264,6 +267,7 @@ function publicVerdict(stored: StoredVerdict, itemName: string, areaName: string
     reasons: stored.reasons,
     quotes: stored.quotes,
     tip: stored.tip,
+    note: stored.note ?? null,
     confidence: stored.confidence,
     servAvailable: Boolean(stored.serv),
     servError: stored.servError ?? null,
