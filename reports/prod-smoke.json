@@ -1,0 +1,50 @@
+{
+  "base": "https://fairprice-ng.vercel.app",
+  "ranAt": "2026-11-12T17:18:24.183Z",
+  "health": {
+    "status": "ok",
+    "service": "fair-price",
+    "store": {
+      "kind": "postgres",
+      "durable": true,
+      "migrations": [
+        "001_init"
+      ]
+    },
+    "configured": {
+      "serv": true,
+      "reppo": true,
+      "telegram": true
+    }
+  },
+  "homeLoadMs": 2421,
+  "title": "Fair Price",
+  "demoCheck": {
+    "ms": 785,
+    "stamp": "Fair price",
+    "reppoBadge": "Checked by Reppo 76/100DecisionAcceptedRoutereviewWhyfair. The submission scored 76 and was accepted but routed to review because it falls in the middle zone between full acceptance (85+) and rejection (below 60). The score reflects solid but not exceptional performance across accuracy (75), evidence (75), and precision (84), with one evaluator assigning a notably lower score of 50 that was excluded due to negative stake weight.Eval IDcmwdqfusc000807l1n336fs5n"
+  },
+  "consoleErrors": [],
+  "liveCheck": {
+    "ms": 12923,
+    "id": "v-b1a442b0-4ef6-447d-a7d9-6795e234f7a2",
+    "label": "high",
+    "band": [
+      1366,
+      1607,
+      1848
+    ],
+    "quote": 1900,
+    "servAvailable": true,
+    "servError": null,
+    "reasons": [
+      "The quoted price of ₦1,900 is above the usual range, which tops out at ₦1,848.",
+      "The official May 2026 figure used in the evidence is ₦1,607, which is below the quote.",
+      "The evidence pack shows only one sample, so the range is based on limited evidence."
+    ],
+    "tip": "If you can, compare nearby stations and try to stay at or below ₦1,848.",
+    "note": null,
+    "reppo": null
+  },
+  "liveStoredReadBack": true
+}

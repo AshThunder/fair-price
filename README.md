@@ -2,6 +2,8 @@
 
 A Nigeria-first price check for everyday stall goods, pump prices, fares, repairs, rent, and services. Type a quote or snap a price tag. The app returns a range, a verdict (fair, too high, suspiciously low, or not sure yet), short reasons, and a negotiation tip. Confirmed payments feed back into the price book, so later checks get measurably better.
 
+Live at https://fairprice-ng.vercel.app and on Telegram as [@FairpriceSERV_bot](https://t.me/FairpriceSERV_bot).
+
 Built for SERV Hackathon 02, Reppo track. SERV Reasoning judges the evidence pack. TypeScript code owns the range maths and hard rules. The live Reppo Eval Router scores each confirmed verdict, and `/metrics` shows seed-only versus after-feedback accuracy on a held-out benchmark next to those eval results.
 
 ## Local run
@@ -49,7 +51,7 @@ All runtime state lives in SQL: checks (`verdicts`), confirmed prices (`observat
 ## What each piece does
 
 - **Code** computes a weighted-median range from dated official anchors plus accepted confirmations, with zone then national fallback, a 15% fair band, outlier quarantine, a 24-hour same-device duplicate window, and device trust that grows with accepted confirmations and drops with quarantined ones.
-- **SERV Reasoning** (`gpt-5.4-mini`, `inference-api.openserv.ai`) writes the judgment, reasons, and tip from a sanitized evidence pack. If SERV is down, the UI still shows the code band and says so.
+- **SERV Reasoning** (`gpt-5.4-mini`, `inference-api.openserv.ai`) explains the verdict and writes the tip from a sanitized evidence pack. The computed range is authoritative: the label always follows where the quote sits in it, so the stamp, range bar, and text agree. If SERV's own verdict differs, its reasons and tip are dropped and any specific reason it gives is shown as "Ada's note". If SERV is down, the UI still shows the range and says so.
 - **Reppo Eval Router** (`https://eval.reppo.xyz/api/v1/agents/evals`). When someone confirms what they paid on a live check, the evidence pack, the verdict, and the paid amount go to Reppo as one `claim` eval. Status is refreshed lazily when the check is read (at most every 4 seconds), so it works on serverless. The UI shows a "Checked by Reppo" badge; the eval ID sits behind its details and on `/metrics`.
 - **Photo reader** runs in the browser with tesseract.js after a greyscale and contrast pass. Photos are never uploaded. The reader prefers amounts with a naira mark, skips pack sizes such as 75cl, and always asks you to check the number.
 - **Abuse limits**: 30 checks and 20 confirmations per 10 minutes per IP and device, per instance.
@@ -82,6 +84,10 @@ Honest limits: the simulated confirmations are drawn around the same references 
 
 ## Deploy notes
 
-Vercel-ready: Vite static build to `dist/public`, serverless `api/index.ts` for `/api/*`, and an SPA fallback in `vercel.json`. Set `DATABASE_URL` before a public launch, or confirmations are lost between cold starts. Setting a Telegram webhook needs a public HTTPS URL, `TELEGRAM_WEBHOOK_SECRET`, and explicit approval.
+Production runs on Vercel (project `fair-price`, functions in `iad1`) with a free Neon Postgres database from the Vercel Marketplace, which sets `DATABASE_URL` and `POSTGRES_URL`. Vite builds the app to `dist/public`; `api/index.ts` serves `/api/*`; `vercel.json` has the SPA fallback. Migrations run on the first database connection; `npm run db:migrate` applies them by hand.
+
+The Telegram bot uses a webhook at `/api/telegram` with `TELEGRAM_WEBHOOK_SECRET`. While the webhook is set, `npm run dev:bot` (long-poll) will not receive updates; delete the webhook first if you need local polling.
+
+`npm run smoke:prod` loads the home page, runs a demo check in headless Chrome, runs one live check without confirming (no Reppo spend), and saves phone-width screenshots.
 
 Do not commit `.env`. Do not put NBS raw files in the repo.

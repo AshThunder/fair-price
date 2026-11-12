@@ -23,6 +23,7 @@ negotiation_tip (one short practical sentence, no emojis),
 evidence_ids (array of ids you actually used),
 note (string or null).
 Write naira amounts as whole numbers with the ₦ sign, for example ₦1,350.
+Write for a shopper in plain words. Call the band "the usual range". Never say "code", "band", "evidence pack", or "sample" in reasons, the tip, or the note.
 Do not mention hidden chain-of-thought.`;
 
 export class ServUnavailableError extends Error {
@@ -30,6 +31,16 @@ export class ServUnavailableError extends Error {
     super(message);
     this.name = "ServUnavailableError";
   }
+}
+
+/** Swap internal words SERV sometimes uses for shopper-facing ones. */
+export function plainWords(text: string): string {
+  return text
+    .replace(/\b(t)he evidence pack\b/gi, (_m, t: string) => `${t}he data`)
+    .replace(/\bevidence pack\b/gi, "data")
+    .replace(/\bcode[- ](?:computed )?(high |low )?band\b/gi, (_m, edge: string | undefined) => (edge ? `${edge.trim()} end of the usual range` : "usual range"))
+    .replace(/\bcomputed band\b/gi, "usual range")
+    .replace(/\bcode verdict\b/gi, "verdict");
 }
 
 function parseJudgment(raw: string, fallback: CodeVerdict, item: Item): ServJudgment | null {
@@ -48,11 +59,11 @@ function parseJudgment(raw: string, fallback: CodeVerdict, item: Item): ServJudg
       range_high: typeof parsed.range_high === "number" ? parsed.range_high : fallback.range.high,
       unit: typeof parsed.unit === "string" && parsed.unit ? parsed.unit : item.unit,
       confidence: parsed.confidence === "high" || parsed.confidence === "medium" || parsed.confidence === "low" ? parsed.confidence : "medium",
-      reasons: Array.isArray(parsed.reasons) ? parsed.reasons.map(String).slice(0, 3) : [],
+      reasons: Array.isArray(parsed.reasons) ? parsed.reasons.map((r) => plainWords(String(r))).slice(0, 3) : [],
       quotes: Array.isArray(parsed.quotes) ? parsed.quotes.map(String).slice(0, 3) : [],
-      negotiation_tip: typeof parsed.negotiation_tip === "string" ? parsed.negotiation_tip : "",
+      negotiation_tip: typeof parsed.negotiation_tip === "string" ? plainWords(parsed.negotiation_tip) : "",
       evidence_ids: Array.isArray(parsed.evidence_ids) ? parsed.evidence_ids.map(String) : [],
-      note: typeof parsed.note === "string" ? parsed.note : null,
+      note: typeof parsed.note === "string" ? plainWords(parsed.note) : null,
     };
   } catch {
     return null;

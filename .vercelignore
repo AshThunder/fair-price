@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+data/.pglite
+node_modules
+dist
+dev-dist
+shots
+reports
+tests
+coverage
+*.log

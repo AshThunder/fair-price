@@ -19,7 +19,9 @@
     "e2e:live": "tsx scripts/e2e-live.ts",
     "e2e:telegram": "tsx scripts/telegram-live.ts",
     "ocr:check": "tsx scripts/ocr-check.ts",
-    "shots": "tsx scripts/shots.ts"
+    "shots": "tsx scripts/shots.ts",
+    "db:migrate": "tsx scripts/db-migrate.ts",
+    "smoke:prod": "tsx scripts/prod-smoke.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.16",

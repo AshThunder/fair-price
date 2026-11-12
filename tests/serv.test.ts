@@ -98,3 +98,12 @@ describe("judgeWithServ retry", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
+
+describe("plainWords", () => {
+  it("replaces internal jargon in SERV text", async () => {
+    const { plainWords } = await import("../server/serv.js");
+    expect(plainWords("The evidence pack shows one sample.")).toBe("The data shows one sample.");
+    expect(plainWords("Above the code high band of ₦1,848.")).toBe("Above the high end of the usual range of ₦1,848.");
+    expect(plainWords("Inside the computed band.")).toBe("Inside the usual range.");
+  });
+});
