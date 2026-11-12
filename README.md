@@ -2,7 +2,7 @@
 
 A fair price check for anything, anywhere. Pick your country, type what you are buying, where, and the price you were quoted (or snap the price tag). Fair Price returns the usual range in your own currency, a verdict (fair, too high, suspiciously low, or not sure yet), short reasons, and a haggling tip. Confirmed payments feed back into the price book, so later checks nearby get measurably better.
 
-Live at https://fairprice-ng.vercel.app and on Telegram as [@FairpriceSERV_bot](https://t.me/FairpriceSERV_bot).
+Live at https://fairprice-global.vercel.app and on Telegram as [@FairpriceSERV_bot](https://t.me/FairpriceSERV_bot).
 
 Built for SERV Hackathon 02, Reppo track.
 
@@ -163,7 +163,7 @@ Honest limits: Nigeria's 73 cases and numbers are unchanged from the Nigeria-onl
 
 Production runs on Vercel (project `fair-price`, functions in `iad1`) with a free Neon Postgres database from the Vercel Marketplace, which sets `DATABASE_URL` and `POSTGRES_URL`. Vite builds the app to `dist/public`; `api/index.ts` serves `/api/*`; `vercel.json` has the SPA fallback. Migrations run on the first database connection; `npm run db:migrate` applies them by hand.
 
-The Telegram bot uses a webhook at `/api/telegram` with `TELEGRAM_WEBHOOK_SECRET`. While the webhook is set, `npm run dev:bot` (long-poll) will not receive updates; delete the webhook first if you need local polling.
+The production domain is `fairprice-global.vercel.app`; the earlier `fairprice-ng.vercel.app` permanently redirects (308) to it. The Telegram bot uses a webhook at `https://fairprice-global.vercel.app/api/telegram` with `TELEGRAM_WEBHOOK_SECRET`. While the webhook is set, `npm run dev:bot` (long-poll) will not receive updates; delete the webhook first if you need local polling.
 
 `npm run smoke:prod` loads the home page, runs demo checks in headless Chrome at 360 and 1440 px, runs one live check without confirming (no Reppo spend), and saves the screenshots.
 

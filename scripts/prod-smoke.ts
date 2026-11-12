@@ -1,10 +1,10 @@
 // Production smoke test: home page, one demo check in the browser, one live /api/check
 // (no confirmation, so no Reppo eval), and 360 px phone plus 1440 px desktop screenshots.
-// Run: BASE_URL=https://fairprice-ng.vercel.app npx tsx scripts/prod-smoke.ts
+// Run: BASE_URL=https://fairprice-global.vercel.app npx tsx scripts/prod-smoke.ts
 import { mkdirSync, writeFileSync } from "node:fs";
 import puppeteer from "puppeteer-core";
 
-const base = process.env.BASE_URL ?? "https://fairprice-ng.vercel.app";
+const base = process.env.BASE_URL ?? "https://fairprice-global.vercel.app";
 mkdirSync("shots", { recursive: true });
 mkdirSync("reports", { recursive: true });
 const out: Record<string, unknown> = { base, ranAt: new Date().toISOString() };
