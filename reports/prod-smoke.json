@@ -1,6 +1,6 @@
 {
   "base": "https://fairprice-ng.vercel.app",
-  "ranAt": "2026-11-12T17:18:24.183Z",
+  "ranAt": "2026-11-12T17:41:29.906Z",
   "health": {
     "status": "ok",
     "service": "fair-price",
@@ -8,7 +8,8 @@
       "kind": "postgres",
       "durable": true,
       "migrations": [
-        "001_init"
+        "001_init",
+        "002_global_currency"
       ]
     },
     "configured": {
@@ -17,32 +18,41 @@
       "telegram": true
     }
   },
-  "homeLoadMs": 2421,
+  "homeLoadMs": 2328,
   "title": "Fair Price",
-  "demoCheck": {
-    "ms": 785,
+  "demoCheckPhone": {
+    "ms": 1340,
     "stamp": "Fair price",
+    "title": "₦1,400 for fresh tomatoes",
     "reppoBadge": "Checked by Reppo 76/100DecisionAcceptedRoutereviewWhyfair. The submission scored 76 and was accepted but routed to review because it falls in the middle zone between full acceptance (85+) and rejection (below 60). The score reflects solid but not exceptional performance across accuracy (75), evidence (75), and precision (84), with one evaluator assigning a notably lower score of 50 that was excluded due to negative stake weight.Eval IDcmwdqfusc000807l1n336fs5n"
+  },
+  "demoCheckDesktop": {
+    "ms": 1300,
+    "stamp": "Fair price",
+    "title": "£1.79 for petrol (unleaded)",
+    "reppoBadge": null
   },
   "consoleErrors": [],
   "liveCheck": {
-    "ms": 12923,
-    "id": "v-b1a442b0-4ef6-447d-a7d9-6795e234f7a2",
-    "label": "high",
+    "ms": 12242,
+    "id": "v-1aa5b0bc-7a68-4231-b21d-7915a94bcf5d",
+    "label": "fair",
     "band": [
-      1366,
-      1607,
-      1848
+      192.916,
+      226.96,
+      261.00399999999996
     ],
-    "quote": 1900,
+    "quote": 260,
+    "currency": "KES",
+    "area": "Nairobi, Kenya",
     "servAvailable": true,
     "servError": null,
     "reasons": [
-      "The quoted price of ₦1,900 is above the usual range, which tops out at ₦1,848.",
-      "The official May 2026 figure used in the evidence is ₦1,607, which is below the quote.",
-      "The evidence pack shows only one sample, so the range is based on limited evidence."
+      "Ksh 260 sits inside the usual range.",
+      "The quote is very close to the top of the usual range.",
+      "The available evidence is official, but the sample is thin."
     ],
-    "tip": "If you can, compare nearby stations and try to stay at or below ₦1,848.",
+    "tip": "This sits inside the recent range of Ksh 193 to Ksh 261 per 1 litre. Still confirm the unit before you pay.",
     "note": null,
     "reppo": null
   },
