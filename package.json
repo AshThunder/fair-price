@@ -1,0 +1,48 @@
+{
+  "name": "fair-price",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Fair Price — Nigeria-first fair-price checks for everyday goods, fares, repairs, and rent.",
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "tsx watch server/index.ts",
+    "dev:web": "vite",
+    "dev:bot": "tsx server/bot-poll.ts",
+    "build": "tsc --noEmit -p tsconfig.json && vite build && tsc -p tsconfig.server.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "start": "node dist/server/index.js",
+    "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "eval:demo": "tsx scripts/run-demo-evals.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.8",
+    "dotenv": "^18.0.10",
+    "hono": "^4.13.18",
+    "motion": "^14.13.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-router-dom": "^7.18.5",
+    "tesseract.js": "^7.0.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/react-router-dom": "^5.3.3",
+    "@vitejs/plugin-react": "^6.3.0",
+    "concurrently": "^10.0.7",
+    "jsdom": "^29.1.1",
+    "puppeteer-core": "^25.17.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

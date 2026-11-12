@@ -1,0 +1,31 @@
+{
+  "generated": "2026-11-12T15:59:26.267Z",
+  "evals": [
+    {
+      "evalId": "cmwdqe791000507l1b4loursj",
+      "verdictId": "demo-rice-fair",
+      "taskType": "claim",
+      "status": "COMPLETED",
+      "score": 64,
+      "decision": "reject",
+      "route": "review",
+      "reason": "fair. Your claim has been rejected due to a low overall score of 64, which is primarily driven by the 'orq_lite_grove' evaluator giving it a low score of 29. The system has routed this to review because the score falls between the reject and accept thresholds.",
+      "creditsCharged": 440,
+      "createdAt": "2026-11-12T15:58:34.311Z",
+      "completedAt": "2026-11-12T15:58:34.311Z"
+    },
+    {
+      "evalId": "cmwdqfusc000807l1n336fs5n",
+      "verdictId": "demo-tomatoes-feedback",
+      "taskType": "claim",
+      "status": "COMPLETED",
+      "score": 76,
+      "decision": "accept",
+      "route": "review",
+      "reason": "fair. The submission scored 76 and was accepted but routed to review because it falls in the middle zone between full acceptance (85+) and rejection (below 60). The score reflects solid but not exceptional performance across accuracy (75), evidence (75), and precision (84), with one evaluator assigning a notably lower score of 50 that was excluded due to negative stake weight.",
+      "creditsCharged": 440,
+      "createdAt": "2026-11-12T15:59:26.266Z",
+      "completedAt": "2026-11-12T15:59:26.266Z"
+    }
+  ]
+}
