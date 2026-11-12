@@ -10,3 +10,4 @@ data/store.json
 *.log
 .DS_Store
 coverage
+data/.pglite

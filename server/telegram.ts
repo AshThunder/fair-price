@@ -1,6 +1,14 @@
 import { telegramToken } from "./env.js";
-import { getSeed } from "./store.js";
+import { getSeed, getStore } from "./store.js";
 import app from "./app.js";
+import { naira } from "../shared/engine.js";
+
+const VERDICT_WORDS: Record<string, string> = {
+  fair: "Fair price",
+  high: "Too high",
+  low: "Suspiciously low",
+  uncertain: "Not sure yet",
+};
 
 const API = "https://api.telegram.org";
 
@@ -13,29 +21,45 @@ type ChatSession = {
   demo: boolean;
 };
 
-const sessions = new Map<number, ChatSession>();
-
 function token(): string {
   const t = telegramToken();
   if (!t) throw new Error("Telegram token is not configured.");
   return t;
 }
 
-export async function telegramApi(method: string, body: Record<string, unknown>): Promise<unknown> {
+export type TelegramSender = (method: string, body: Record<string, unknown>) => Promise<unknown>;
+
+async function httpSender(method: string, body: Record<string, unknown>): Promise<unknown> {
   const response = await fetch(`${API}/bot${token()}/${method}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(15_000),
   });
   return response.json();
 }
 
-function session(chatId: number): ChatSession {
-  const existing = sessions.get(chatId);
-  if (existing) return existing;
-  const fresh: ChatSession = { step: "idle", demo: false };
-  sessions.set(chatId, fresh);
-  return fresh;
+let sender: TelegramSender = httpSender;
+
+/** Swap the outbound transport (tests feed synthetic updates without messaging anyone). */
+export function setTelegramSender(next: TelegramSender | null): void {
+  sender = next ?? httpSender;
+}
+
+export async function telegramApi(method: string, body: Record<string, unknown>): Promise<unknown> {
+  return sender(method, body);
+}
+
+// Sessions live in the database so webhook calls on different serverless
+// instances see the same conversation state.
+async function loadSession(chatId: number): Promise<ChatSession> {
+  const store = await getStore();
+  return (await store.getSession<ChatSession>(String(chatId))) ?? { step: "idle", demo: false };
+}
+
+async function saveSession(chatId: number, s: ChatSession): Promise<void> {
+  const store = await getStore();
+  await store.setSession(String(chatId), s);
 }
 
 function itemKeyboard() {
@@ -79,7 +103,7 @@ Commands:
 /demo on or /demo off — use seeded demo data
 /help — this message
 
-Official figures are May 2026 averages from the National Bureau of Statistics, not live stall prices.`;
+Official figures are dated NBS monthly averages, not live stall prices.`;
 
 export async function handleTelegramUpdate(update: {
   message?: {
@@ -92,9 +116,17 @@ export async function handleTelegramUpdate(update: {
   const message = update.message;
   const chatId = message?.chat?.id;
   if (!chatId || message?.from?.is_bot) return;
-  const text = (message.text ?? "").trim();
+  const text = (message.text ?? "").trim().slice(0, 500);
   const hasPhoto = Array.isArray(message.photo) && message.photo.length > 0;
-  const s = session(chatId);
+  const s = await loadSession(chatId);
+  try {
+    await route(chatId, s, text, hasPhoto);
+  } finally {
+    await saveSession(chatId, s);
+  }
+}
+
+async function route(chatId: number, s: ChatSession, text: string, hasPhoto: boolean): Promise<void> {
 
   if (text === "/start" || text === "/help") {
     s.step = "idle";
@@ -107,7 +139,7 @@ export async function handleTelegramUpdate(update: {
       chat_id: chatId,
       text: s.demo
         ? "Demo mode is on. Checks use seeded data and pre-completed evals, with no live credit spend."
-        : "Demo mode is off. Live checks will call SERV and may queue a Reppo eval.",
+        : "Demo mode is off. Live checks ask SERV, and a confirmed payment is scored by Reppo.",
     });
     return;
   }
@@ -245,18 +277,18 @@ async function maybeCapturePrice(chatId: number, s: ChatSession, text: string) {
   s.step = "verdict";
   const range =
     v.low != null && v.high != null
-      ? `Range ${Math.round(v.low)} to ${Math.round(v.high)} naira per ${v.unit}. Midpoint ${v.mid != null ? Math.round(v.mid) : "n/a"}.`
+      ? `Usual range ${naira(v.low)} to ${naira(v.high)}${v.mid != null ? `, middle ${naira(v.mid)}` : ""}.`
       : "No tight range yet.";
   const textOut = [
-    `Verdict: ${v.label.toUpperCase()} for ${v.itemName} in ${v.areaName}.`,
-    `Quoted ${Math.round(v.quoteNaira)} naira per ${v.unit}.`,
+    `Verdict: ${VERDICT_WORDS[v.label] ?? v.label} for ${v.itemName} in ${v.areaName}.`,
+    `Quoted ${naira(v.quoteNaira)} per ${v.unit}.`,
     range,
     "",
     v.reasons.join("\n"),
     "",
     `Tip: ${v.tip}`,
     "",
-    "If you paid, send: paid 1900 (use the amount you actually paid).",
+    `If you paid, send the amount, for example: paid ${Math.round(v.quoteNaira)}`,
   ].join("\n");
   await telegramApi("sendMessage", { chat_id: chatId, text: textOut });
 }
@@ -288,7 +320,7 @@ async function confirmPaid(chatId: number, s: ChatSession, amount: number) {
       ? "This confirmation was ignored because the same device already sent a similar price today."
       : status === "quarantine"
         ? "This confirmation was quarantined as an outlier until more nearby prices agree."
-        : "Saved. Thank you — this helps the next person in your area.";
+        : "Saved. Thank you, this helps the next person in your area.";
   s.step = "idle";
   await telegramApi("sendMessage", { chat_id: chatId, text: note });
 }
@@ -296,16 +328,19 @@ async function confirmPaid(chatId: number, s: ChatSession, amount: number) {
 async function sendMetrics(chatId: number) {
   const response = await app.request("/api/metrics");
   const m = (await response.json()) as {
-    seedOnly: { agreementRate: number; agreed: number; cases: number; mape: number | null };
-    afterFeedback: { agreementRate: number; agreed: number; cases: number; mape: number | null; medianReppoScore: number | null; reppoCount: number };
+    benchmark: {
+      totalCases: number;
+      splits: Record<"test" | "dev", { seedOnly: { accuracy: number; correct: number; cases: number }; afterFeedback: { accuracy: number; correct: number; cases: number } }>;
+    };
+    reppo: { completed: number; medianScore: number | null };
   };
   const pct = (n: number) => `${Math.round(n * 100)}%`;
-  const mape = (n: number | null) => (n == null ? "n/a" : `${(n * 100).toFixed(1)}%`);
+  const t = m.benchmark.splits.test;
   const text = [
-    "Fixed benchmark (10 held-out cases).",
-    `Seed only: ${pct(m.seedOnly.agreementRate)} agreement (${m.seedOnly.agreed}/${m.seedOnly.cases}), MAPE ${mape(m.seedOnly.mape)}.`,
-    `After feedback: ${pct(m.afterFeedback.agreementRate)} agreement (${m.afterFeedback.agreed}/${m.afterFeedback.cases}), MAPE ${mape(m.afterFeedback.mape)}.`,
-    `Reppo completed evals: ${m.afterFeedback.reppoCount}. Median score: ${m.afterFeedback.medianReppoScore ?? "n/a"}.`,
+    `Benchmark: ${m.benchmark.totalCases} Nigerian price cases, held-out test split ${t.seedOnly.cases} cases.`,
+    `Seed data only: ${pct(t.seedOnly.accuracy)} correct (${t.seedOnly.correct}/${t.seedOnly.cases}).`,
+    `After confirmations: ${pct(t.afterFeedback.accuracy)} correct (${t.afterFeedback.correct}/${t.afterFeedback.cases}).`,
+    `Reppo checked ${m.reppo.completed} verdicts. Median score ${m.reppo.medianScore ?? "n/a"}.`,
   ].join("\n");
   await telegramApi("sendMessage", { chat_id: chatId, text });
 }

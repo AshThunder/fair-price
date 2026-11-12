@@ -1,0 +1,86 @@
+{
+  "ranAt": "2026-11-12T16:32:22.596Z",
+  "input": {
+    "itemId": "tomatoes",
+    "areaId": "NG-KANO",
+    "quoteNaira": 1400,
+    "paidNaira": 1350
+  },
+  "health": {
+    "status": "ok",
+    "service": "fair-price",
+    "store": {
+      "kind": "pglite",
+      "durable": true,
+      "migrations": [
+        "001_init"
+      ]
+    },
+    "configured": {
+      "serv": true,
+      "reppo": true,
+      "telegram": true
+    }
+  },
+  "check": {
+    "httpMs": 7145,
+    "verdictId": "v-9c43ce5c-f4a4-4779-9b47-313fb209e914",
+    "label": "high",
+    "range": {
+      "low": 1005.0315,
+      "mid": 1182.39,
+      "high": 1359.7485,
+      "unit": "1 kg",
+      "fallback": "zone",
+      "sampleSize": 1
+    },
+    "servAvailable": false,
+    "servError": "SERV returned HTTP 400.",
+    "confidence": "medium",
+    "reasons": [
+      "The judgment service is unavailable, so this result uses the local price band only.",
+      "No official state figure was on file, so the dated zonal average was used as the anchor."
+    ],
+    "tip": "Ask for a price closer to ₦1,182 per 1 kg. Sellers often move when you mention a recent area range of ₦1,005 to ₦1,360."
+  },
+  "feedback": {
+    "ok": true,
+    "feedbackId": "fb-853399ec-3b36-4a83-ab10-40b4ed9ddfb1",
+    "observation": {
+      "id": "obs-1d14ef0f-d48a-46bd-8e17-511a02830dd1",
+      "status": "accepted",
+      "reason": "ok"
+    },
+    "reppo": {
+      "state": "pending",
+      "message": "QUEUED"
+    }
+  },
+  "reppo": {
+    "evalId": "cmwdrm9kt000908jv903110hp",
+    "status": "COMPLETED",
+    "state": "checked",
+    "score": 75,
+    "route": "review",
+    "decision": "accept",
+    "reason": "The verdict was accepted with a medium-confidence score of 75, driven by moderate accuracy and evidence ratings. The evaluators agreed the price judgment was reasonably accurate but had minor gaps in precision."
+  },
+  "reppoStored": {
+    "eval": {
+      "evalId": "cmwdrm9kt000908jv903110hp",
+      "verdictId": "v-9c43ce5c-f4a4-4779-9b47-313fb209e914",
+      "taskType": "claim",
+      "status": "COMPLETED",
+      "score": 75,
+      "decision": "accept",
+      "route": "review",
+      "reason": "The verdict was accepted with a medium-confidence score of 75, driven by moderate accuracy and evidence ratings. The evaluators agreed the price judgment was reasonably accurate but had minor gaps in precision.",
+      "creditsCharged": 440,
+      "latencyMs": 48527,
+      "createdAt": "2026-11-12T16:31:34.061Z",
+      "completedAt": "2026-11-12T16:32:22.588Z",
+      "lastPolledAt": "2026-11-12T16:32:22.588Z"
+    },
+    "source": "live"
+  }
+}

@@ -20,6 +20,8 @@ export function evidencePackText(input: {
   reasons: string[];
   verdict: string;
   tip: string;
+  /** What the buyer reported paying after the check, if they confirmed. */
+  paidNaira?: number | null;
 }): string {
   const lines = [
     `Fair Price judgment pack (sanitized, no names, phones, photos, or exact GPS).`,
@@ -30,8 +32,13 @@ export function evidencePackText(input: {
     `Verdict: ${input.verdict}.`,
     `Reasons: ${input.reasons.join("; ") || "none"}.`,
     `Negotiation tip: ${input.tip}`,
-    `Evidence:`,
   ];
+  if (input.paidNaira != null) {
+    lines.push(
+      `Outcome: the buyer later confirmed paying ${input.paidNaira} naira. Judge whether the verdict, range, and tip were accurate and useful given the evidence and this outcome.`,
+    );
+  }
+  lines.push(`Evidence:`);
   for (const p of input.points) {
     lines.push(`- ${p.id} ${p.kind} ${p.priceNaira} naira (${p.label}${p.period ? ", " + p.period : ""})`);
   }

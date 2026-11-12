@@ -1,71 +1,93 @@
+// Refresh product screenshots from a running server (npm run build && npm start).
+// Uses demo mode so no SERV or Reppo credits are spent.
 import { mkdirSync } from "node:fs";
-import puppeteer from "puppeteer-core";
+import puppeteer, { type Page } from "puppeteer-core";
 
-const base = "http://127.0.0.1:3001";
-const dir = "/workspace/fair-price/shots";
+const base = process.env.BASE_URL ?? "http://127.0.0.1:3001";
+const dir = new URL("../shots/", import.meta.url).pathname;
 mkdirSync(dir, { recursive: true });
 
-async function main() {
-  const browser = await puppeteer.launch({
-    executablePath: "/usr/bin/google-chrome-stable",
-    headless: true,
-    args: ["--no-sandbox", "--disable-dev-shm-usage", "--hide-scrollbars"],
-    defaultViewport: { width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
-  });
+const browser = await puppeteer.launch({
+  executablePath: "/usr/bin/google-chrome-stable",
+  headless: true,
+  args: ["--no-sandbox", "--disable-dev-shm-usage", "--hide-scrollbars"],
+});
+
+async function newPage(width: number): Promise<Page> {
   const page = await browser.newPage();
+  await page.setViewport({ width, height: 800, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   await page.emulateMediaFeatures([{ name: "prefers-reduced-motion", value: "reduce" }]);
-
-  async function shot(name: string) {
-    await new Promise((r) => setTimeout(r, 400));
-    await page.screenshot({ path: `${dir}/${name}.png`, fullPage: true, type: "png" });
-    process.stdout.write(`wrote shots/${name}.png\n`);
-  }
-
-  await page.goto(`${base}/?demo=1`, { waitUntil: "networkidle0", timeout: 30_000 });
-  await page.waitForSelector("form");
-  await shot("01-home");
-
-  async function check(itemLabel: string, areaLabel: string, price: string, name: string) {
-    await page.goto(`${base}/?demo=1`, { waitUntil: "networkidle0" });
-    await page.waitForSelector("form");
-    const itemSelect = await page.$("select");
-    const areaSelect = (await page.$$("select"))[1];
-    const itemValue = await page.$$eval("select option", (opts, label) => {
-      const hit = opts.find((o) => (o.textContent ?? "").includes(label as string));
-      return hit?.value ?? "";
-    }, itemLabel);
-    const areaValue = await page.$$eval("select option", (opts, label) => {
-      const hits = opts.filter((o) => (o.textContent ?? "").trim() === label);
-      return hits.at(-1)?.value ?? "";
-    }, areaLabel);
-    await itemSelect?.select(itemValue);
-    await areaSelect?.select(areaValue);
-    const input = await page.$('input[inputMode="decimal"], input');
-    await input?.click({ clickCount: 3 });
-    await page.keyboard.type(price);
-    await page.click('button[type="submit"]');
-    await page.waitForSelector(".verdict", { timeout: 20_000 });
-    await shot(name);
-  }
-
-  await check("Local short-grained rice", "Nigeria (national)", "1905", "02-verdict-fair");
-  await check("Local short-grained rice", "Nigeria (national)", "3200", "03-verdict-high");
-  await check("Local short-grained rice", "Nigeria (national)", "900", "04-verdict-low");
-  await check("Phone screen", "Enugu", "25000", "05-verdict-uncertain");
-  await check("Fresh tomatoes", "Kano", "1400", "08-verdict-tomatoes");
-
-  await page.goto(`${base}/board?demo=1`, { waitUntil: "networkidle0" });
-  await page.waitForSelector(".board-row");
-  await shot("06-board");
-
-  await page.goto(`${base}/metrics?demo=1`, { waitUntil: "networkidle0" });
-  await page.waitForSelector(".metrics-pair");
-  await shot("07-metrics");
-
-  await browser.close();
+  return page;
 }
 
-main().catch((err: Error) => {
-  process.stderr.write(`${err.message}\n`);
-  process.exit(1);
-});
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function shot(page: Page, name: string, selector?: string) {
+  await wait(500);
+  if (selector) {
+    const el = await page.$(selector);
+    if (!el) throw new Error(`missing ${selector}`);
+    await el.screenshot({ path: `${dir}${name}.png` });
+  } else {
+    await page.screenshot({ path: `${dir}${name}.png`, fullPage: true });
+  }
+  process.stdout.write(`wrote shots/${name}.png\n`);
+}
+
+async function check(page: Page, itemId: string, areaId: string, price: string) {
+  await page.goto(`${base}/?demo=1`, { waitUntil: "networkidle0" });
+  await page.waitForSelector("form select");
+  const selects = await page.$$("form select");
+  await selects[0].select(itemId);
+  await selects[1].select(areaId);
+  const input = await page.$("form input[inputmode=numeric]");
+  await input!.click({ clickCount: 3 });
+  await input!.type(price);
+  await page.click("form button[type=submit]");
+  await page.waitForSelector("article.verdict:not(.verdict-loading)", { timeout: 20_000 });
+}
+
+const page = await newPage(390);
+await page.goto(`${base}/?demo=1`, { waitUntil: "networkidle0" });
+await page.waitForSelector("form select");
+await shot(page, "01-home");
+
+await check(page, "rice-local", "NG", "1905.43");
+await shot(page, "02-verdict-fair", "article.verdict");
+await page.click("details.reppo summary");
+await shot(page, "02b-verdict-fair-full");
+
+await check(page, "pms", "NG-KANO", "2400");
+await shot(page, "03-verdict-high", "article.verdict");
+
+await check(page, "rice-local", "NG-ENUGU", "900");
+await shot(page, "04-verdict-low", "article.verdict");
+
+await check(page, "barbing", "NG-ABUJA", "2500");
+await shot(page, "05-verdict-uncertain", "article.verdict");
+
+await page.goto(`${base}/board?demo=1`, { waitUntil: "networkidle0" });
+await page.waitForSelector(".board-list");
+await shot(page, "06-board");
+
+await page.goto(`${base}/metrics?demo=1`, { waitUntil: "networkidle0" });
+await page.waitForSelector(".headline-metric");
+await shot(page, "07-metrics");
+
+const narrow = await newPage(360);
+await narrow.goto(`${base}/?demo=1`, { waitUntil: "networkidle0" });
+await narrow.waitForSelector("form select");
+await shot(narrow, "08-mobile-360-home");
+await check(narrow, "tomatoes", "NG-KANO", "1400");
+await shot(narrow, "09-mobile-360-verdict");
+
+const wide = await browser.newPage();
+await wide.setViewport({ width: 1280, height: 900, deviceScaleFactor: 1 });
+await wide.emulateMediaFeatures([{ name: "prefers-reduced-motion", value: "reduce" }]);
+await check(wide, "tomatoes", "NG-KANO", "1400");
+await shot(wide, "10-desktop-verdict");
+await wide.goto(`${base}/metrics?demo=1`, { waitUntil: "networkidle0" });
+await wide.waitForSelector(".headline-metric");
+await shot(wide, "11-desktop-metrics");
+
+await browser.close();

@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Fair Price — Nigeria-first fair-price checks for everyday goods, fares, repairs, and rent.",
+  "description": "Fair Price \u2014 Nigeria-first fair-price checks for everyday goods, fares, repairs, and rent.",
   "scripts": {
     "dev": "concurrently -k -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "tsx watch server/index.ts",
@@ -14,13 +14,20 @@
     "test:watch": "vitest",
     "start": "node dist/server/index.js",
     "preview": "vite preview --host 127.0.0.1 --port 4173",
-    "eval:demo": "tsx scripts/run-demo-evals.ts"
+    "bench": "tsx scripts/build-benchmark.ts",
+    "db:inspect": "tsx scripts/db-inspect.ts",
+    "e2e:live": "tsx scripts/e2e-live.ts",
+    "e2e:telegram": "tsx scripts/telegram-live.ts",
+    "ocr:check": "tsx scripts/ocr-check.ts",
+    "shots": "tsx scripts/shots.ts"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.5.16",
     "@hono/node-server": "^2.1.8",
     "dotenv": "^18.0.10",
     "hono": "^4.13.18",
     "motion": "^14.13.0",
+    "postgres": "^4.1.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router-dom": "^7.18.5",

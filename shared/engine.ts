@@ -319,6 +319,22 @@ export function defaultTip(label: VerdictLabel, item: Item, range: RangeResult, 
   return `This sits inside the recent area range of ${naira(range.low)} to ${naira(range.high)} per ${item.unit}. Still confirm the unit before you pay.`;
 }
 
+export interface DeviceStats {
+  accepted: number;
+  quarantined: number;
+  rejected: number;
+}
+
+/**
+ * Trust for a device's next confirmation. New devices start at 0.45, each
+ * accepted confirmation adds 0.15 up to 0.9, and quarantined or duplicate
+ * submissions pull trust down so a gaming device fades out of the range.
+ */
+export function deviceTrust(stats: DeviceStats): number {
+  const raw = NEW_DEVICE_TRUST + 0.15 * stats.accepted - 0.2 * stats.quarantined - 0.05 * stats.rejected;
+  return Math.round(Math.max(0.1, Math.min(TRUSTED_DEVICE_TRUST, raw)) * 100) / 100;
+}
+
 export function applyAntiGaming(args: {
   itemId: string;
   areaId: string;
@@ -328,8 +344,13 @@ export function applyAntiGaming(args: {
   observations: Observation[];
   refs: OfficialRef[];
   areas: Area[];
+  /** Device history from the store; when given it sets trust instead of the observation scan. */
+  device?: DeviceStats;
 }): { status: Observation["status"]; trust: number; reason: string } {
   const { itemId, areaId, priceNaira, deviceHash: hash, now, observations, refs, areas } = args;
+  if (!(priceNaira > 0) || !Number.isFinite(priceNaira)) {
+    return { status: "rejected", trust: 0, reason: "invalid-price" };
+  }
   const windowStart = now.getTime() - DUPLICATE_WINDOW_MS;
   const sameDeviceRecent = observations.filter(
     (o) => o.deviceHash === hash && o.itemId === itemId && o.areaId === areaId && new Date(o.createdAt).getTime() >= windowStart,
@@ -338,8 +359,11 @@ export function applyAntiGaming(args: {
     return { status: "rejected", trust: 0, reason: "duplicate-device-window" };
   }
 
-  const deviceHistory = observations.filter((o) => o.deviceHash === hash && o.status === "accepted");
-  const trust = deviceHistory.length >= 2 ? TRUSTED_DEVICE_TRUST : NEW_DEVICE_TRUST;
+  const trust = args.device
+    ? deviceTrust(args.device)
+    : observations.filter((o) => o.deviceHash === hash && o.status === "accepted").length >= 2
+      ? TRUSTED_DEVICE_TRUST
+      : NEW_DEVICE_TRUST;
 
   const range = buildRange(itemId, areaId, refs, observations, areas, now);
   const peers = range.points.map((p) => p.priceNaira);

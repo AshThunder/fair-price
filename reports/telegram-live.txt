@@ -1,0 +1,45 @@
+getMe {"ok":true,"username":"FairpriceSERV_bot","is_bot":true}
+getWebhookInfo {"ok":true,"webhookSet":false,"pending":0}
+live SERV configured: true
+
+> /start  [HTTP 200, 1737 ms]
+sendMessage: Fair Price checks whether a stall, pump, fare, repair, or rent quote is fair for your area.
+
+Send /check to start. You can also send a photo of a price and then type the amount so you can confirm it.
+
+Commands:
+/check — start a price check
+/board — area price board
+/metrics — seed-only versus after-feedback accuracy
+/demo on or /demo off — use seeded demo data
+/help — this message
+
+Official figures are dated NBS monthly averages, not live stall prices.
+
+> /check  [HTTP 200, 5 ms]
+sendMessage: Which item are you checking?
+
+> Fresh tomatoes  [HTTP 200, 2 ms]
+sendMessage: Checking Fresh tomatoes per 1 kg. Which area?
+
+> Kano  [HTTP 200, 2 ms]
+sendMessage: What price were you quoted, in naira? Type the number only.
+
+> ₦1,600  [HTTP 200, 4471 ms]
+sendMessage: Verdict: HIGH for Fresh tomatoes in Kano.
+Quoted 1600 naira per 1 kg.
+Range 1005 to 1360 naira per 1 kg. Midpoint 1182.
+
+The quoted price of ₦1,600 is above the top of the computed band at ₦1,360.
+The only evidence used is an official May 2026 food price average for the North West, not a live stall quote.
+The evidence is current enough for a rough check, but it is a single official data point.
+
+Tip: Ask for a price closer to ₦1,182 per 1 kg. Sellers often move when you mention a recent area range of ₦1,005 to ₦1,360.
+
+If you paid, send: paid 1900 (use the amount you actually paid).
+
+> /metrics  [HTTP 200, 11 ms]
+sendMessage: Benchmark: 73 Nigerian price cases, held-out test split 46 cases.
+Seed data only: 48% correct (22/46).
+After confirmations: 83% correct (38/46).
+Reppo checked 0 verdicts. Median score n/a.

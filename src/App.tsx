@@ -28,7 +28,7 @@ export function App() {
     <Shell demo={demo} onDemo={setDemo}>
       <Routes>
         <Route path="/" element={<Home demo={demo} />} />
-        <Route path="/board" element={<Board />} />
+        <Route path="/board" element={<Board demo={demo} />} />
         <Route path="/metrics" element={<MetricsPage demo={demo} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

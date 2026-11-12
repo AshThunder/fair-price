@@ -1,43 +1,196 @@
 import { motion, useReducedMotion } from "motion/react";
-import { useState } from "react";
-import type { PublicVerdict } from "../api";
-import { api } from "../api";
+import { useEffect, useId, useRef, useState } from "react";
+import { api, naira, type PublicVerdict, type ReppoBadge as Badge } from "../api";
 import { getDeviceId } from "../device";
-import { Mascot, type MascotMood } from "./Mascot";
+import { Mascot } from "./Mascot";
 
-function naira(n: number): string {
-  return `₦${Math.round(n).toLocaleString("en-NG")}`;
+const STAMP: Record<PublicVerdict["label"], string> = {
+  fair: "Fair price",
+  high: "Too high",
+  low: "Suspiciously low",
+  uncertain: "Not sure yet",
+};
+
+const FALLBACK_NOTE: Record<string, string> = {
+  local: "local figures",
+  zone: "the zone average",
+  national: "the national average",
+  none: "no figures yet",
+};
+
+function RangeRuler({ v }: { v: PublicVerdict }) {
+  const reduce = useReducedMotion();
+  if (v.low == null || v.high == null || v.mid == null) {
+    return <p className="range-empty">No usual range for this area yet. Your confirmed payment starts one.</p>;
+  }
+  const lo = Math.min(v.low, v.quoteNaira) * 0.9;
+  const hi = Math.max(v.high, v.quoteNaira) * 1.1;
+  const pos = (n: number) => `${((n - lo) / (hi - lo)) * 100}%`;
+  return (
+    <figure className="ruler" aria-label={`Usual range ${naira(v.low)} to ${naira(v.high)}, middle ${naira(v.mid)}. Your quote ${naira(v.quoteNaira)}.`}>
+      <div className="ruler-track" aria-hidden="true">
+        <span className="ruler-band" style={{ left: pos(v.low), width: `calc(${pos(v.high)} - ${pos(v.low)})` }} />
+        <span className="ruler-mid" style={{ left: pos(v.mid) }} />
+        <motion.span
+          className={`ruler-needle ${v.label}`}
+          initial={reduce ? false : { left: pos(v.mid) }}
+          animate={{ left: pos(v.quoteNaira) }}
+          transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 160, damping: 14, delay: 0.15 }}
+        >
+          <span className="ruler-needle-label">You</span>
+        </motion.span>
+      </div>
+      <figcaption className="ruler-legend">
+        <span>
+          <i className="ruler-key ruler-key-band" aria-hidden="true" />
+          Usual {naira(v.low)} to {naira(v.high)}
+        </span>
+        <span>
+          <i className={`ruler-key ruler-key-you ${v.label}`} aria-hidden="true" />
+          You {naira(v.quoteNaira)}
+        </span>
+      </figcaption>
+    </figure>
+  );
+}
+
+export function ReppoBadge({ reppo, confirmed, demo }: { reppo: Badge | null; confirmed: boolean; demo: boolean }) {
+  if (!reppo) {
+    if (demo) return null;
+    return (
+      <p className="reppo reppo-idle">
+        <ReppoMark />
+        {confirmed ? "Reppo will score this check shortly" : "Confirm what you paid and Reppo scores this check"}
+      </p>
+    );
+  }
+  if (reppo.state === "pending") {
+    return (
+      <p className="reppo reppo-pending" role="status">
+        <span className="dot-spinner" aria-hidden="true" />
+        Reppo is scoring this check. It takes about a minute
+      </p>
+    );
+  }
+  if (reppo.state === "failed") {
+    return (
+      <p className="reppo reppo-failed">
+        <ReppoMark />
+        Reppo could not score this check
+      </p>
+    );
+  }
+  return (
+    <details className="reppo reppo-checked">
+      <summary>
+        <ReppoMark />
+        <span>
+          Checked by Reppo
+          {reppo.score != null ? <strong className="reppo-score"> {Math.round(reppo.score)}/100</strong> : null}
+        </span>
+      </summary>
+      <dl className="reppo-details">
+        {reppo.decision ? (
+          <>
+            <dt>Decision</dt>
+            <dd>{reppo.decision === "accept" ? "Accepted" : reppo.decision === "reject" ? "Not accepted" : reppo.decision}</dd>
+          </>
+        ) : null}
+        {reppo.route ? (
+          <>
+            <dt>Route</dt>
+            <dd>{reppo.route}</dd>
+          </>
+        ) : null}
+        {reppo.reason ? (
+          <>
+            <dt>Why</dt>
+            <dd>{reppo.reason}</dd>
+          </>
+        ) : null}
+        <dt>Eval ID</dt>
+        <dd className="mono">{reppo.evalId}</dd>
+      </dl>
+    </details>
+  );
+}
+
+function ReppoMark() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3l7 3v6c0 4-3 7-7 9c-4-2-7-5-7-9V6z" />
+      <path d="M8.5 12l2.5 2.5l4.5-5" />
+    </svg>
+  );
+}
+
+export function VerdictSkeleton() {
+  return (
+    <motion.article className="verdict verdict-loading card" aria-busy="true" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+      <div className="verdict-head">
+        <span className="skeleton skeleton-stamp" />
+      </div>
+      <span className="skeleton skeleton-line wide" />
+      <span className="skeleton skeleton-line" />
+      <span className="skeleton skeleton-ruler" />
+      <p className="muted">Comparing your quote with dated averages and recent confirmed payments</p>
+    </motion.article>
+  );
 }
 
 export function VerdictCard({ verdict, demo, onUpdated }: { verdict: PublicVerdict; demo: boolean; onUpdated?: (v: PublicVerdict) => void }) {
   const reduce = useReducedMotion();
+  const ids = useId();
   const [paid, setPaid] = useState(String(Math.round(verdict.quoteNaira)));
-  const [note, setNote] = useState<string | null>(null);
+  const [note, setNote] = useState<{ tone: "ok" | "warn"; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
-  const mood: MascotMood = verdict.label;
+  const [confirmed, setConfirmed] = useState(false);
+  const pollTimer = useRef<number | null>(null);
 
-  const min = Math.min(verdict.quoteNaira, verdict.low ?? verdict.quoteNaira, verdict.high ?? verdict.quoteNaira, verdict.mid ?? verdict.quoteNaira);
-  const max = Math.max(verdict.quoteNaira, verdict.low ?? verdict.quoteNaira, verdict.high ?? verdict.quoteNaira, verdict.mid ?? verdict.quoteNaira);
-  const span = Math.max(1, max - min);
-  const pos = (n: number) => ((n - min) / span) * 100;
+  // After a live confirmation, poll the verdict until Reppo finishes (about a minute).
+  useEffect(() => {
+    if (!confirmed || verdict.demo || verdict.reppo?.state !== "pending") return;
+    let tries = 0;
+    const tick = async () => {
+      tries += 1;
+      try {
+        const { verdict: next } = await api.verdict(verdict.id);
+        onUpdated?.(next);
+        if (next.reppo && next.reppo.state !== "pending") return;
+      } catch {
+        // keep trying quietly
+      }
+      if (tries < 40) pollTimer.current = window.setTimeout(tick, 5000);
+    };
+    pollTimer.current = window.setTimeout(tick, 3000);
+    return () => {
+      if (pollTimer.current) window.clearTimeout(pollTimer.current);
+    };
+  }, [confirmed, verdict.id, verdict.demo, verdict.reppo?.state, onUpdated]);
 
   async function send(kind: "paid" | "fair" | "not-fair") {
+    const amount = Number(paid.replace(/[,\s₦]/g, ""));
+    if (kind === "paid" && (!Number.isFinite(amount) || amount <= 0)) {
+      setNote({ tone: "warn", text: "Type the amount you paid, in naira" });
+      return;
+    }
     setBusy(true);
     setNote(null);
     try {
-      const result = await api.feedback({
-        verdictId: verdict.id,
-        kind,
-        paidNaira: kind === "paid" ? Number(paid) : undefined,
-        deviceId: getDeviceId(),
-        demo,
-      });
-      if (result.observation?.status === "rejected") setNote("This confirmation was ignored because the same device already sent a similar price today.");
-      else if (result.observation?.status === "quarantine") setNote("This confirmation was quarantined as an outlier until more nearby prices agree.");
-      else setNote(kind === "paid" ? "Saved. Thank you — this helps the next person in your area." : "Saved. Thank you.");
-      onUpdated?.(verdict);
+      const result = await api.feedback({ verdictId: verdict.id, kind, paidNaira: kind === "paid" ? amount : undefined, deviceId: getDeviceId(), demo });
+      const status = result.observation?.status;
+      if (status === "rejected") setNote({ tone: "warn", text: "You already confirmed this item here today, so this one was not counted" });
+      else if (status === "quarantine") setNote({ tone: "warn", text: "That amount is far from what others paid, so it is on hold until more prices agree" });
+      else setNote({ tone: "ok", text: kind === "paid" ? "Saved. The next person in your area gets a better range" : "Thanks for the feedback" });
+      if (kind === "paid") {
+        setConfirmed(true);
+        if (result.reppo?.state === "pending") {
+          const { verdict: next } = await api.verdict(verdict.id);
+          onUpdated?.(next);
+        }
+      }
     } catch (err) {
-      setNote(err instanceof Error ? err.message : "Feedback could not be saved.");
+      setNote({ tone: "warn", text: err instanceof Error ? err.message : "That did not save. Try again" });
     } finally {
       setBusy(false);
     }
@@ -45,82 +198,102 @@ export function VerdictCard({ verdict, demo, onUpdated }: { verdict: PublicVerdi
 
   return (
     <motion.article
-      className={`verdict ${verdict.label}`}
-      initial={reduce ? false : { y: 24, scale: 0.96, opacity: 0 }}
-      animate={{ y: 0, scale: 1, opacity: 1 }}
-      transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 20 }}
+      className={`verdict card verdict-${verdict.label}`}
+      initial={reduce ? false : { y: 24, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 320, damping: 24 }}
+      aria-labelledby={`${ids}-title`}
     >
       <div className="verdict-head">
-        <Mascot mood={mood} compact />
         <div>
-          <span className={`stamp ${verdict.label}`}>{verdict.label}</span>
-          <h2 style={{ marginTop: 10 }}>
-            {naira(verdict.quoteNaira)} for {verdict.itemName}
+          <motion.p
+            className={`stamp stamp-${verdict.label}`}
+            initial={reduce ? false : { scale: 1.6, rotate: -14, opacity: 0 }}
+            animate={{ scale: 1, rotate: -3, opacity: 1 }}
+            transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 18, delay: 0.1 }}
+          >
+            {STAMP[verdict.label]}
+          </motion.p>
+          <h2 id={`${ids}-title`} className="verdict-title">
+            <span className="figure">{naira(verdict.quoteNaira)}</span> for {verdict.itemName.toLowerCase()}
           </h2>
-          <p className="hint" style={{ marginTop: 6 }}>
+          <p className="muted">
             {verdict.areaName}, per {verdict.unit}
           </p>
         </div>
+        <Mascot mood={verdict.label} size={104} label={`Ada reacts: ${STAMP[verdict.label]}`} />
       </div>
 
-      {verdict.low != null && verdict.high != null ? (
-        <div className="range">
-          <div className="range-track" aria-hidden="true">
-            <span className="range-band" style={{ left: `${pos(verdict.low)}%`, width: `${pos(verdict.high) - pos(verdict.low)}%` }} />
-            <span className="range-needle" style={{ left: `${pos(verdict.quoteNaira)}%` }} />
-          </div>
-          <div className="figures">
-            <span>{naira(verdict.low)}</span>
-            <span>{verdict.mid != null ? `Mid ${naira(verdict.mid)}` : ""}</span>
-            <span>{naira(verdict.high)}</span>
-          </div>
-        </div>
-      ) : (
-        <p className="hint">No tight local range yet for this item in this area.</p>
-      )}
+      <RangeRuler v={verdict} />
 
       <ul className="reasons">
         {verdict.reasons.map((r) => (
           <li key={r}>{r}</li>
         ))}
       </ul>
-      {verdict.quotes.length ? (
-        <ul className="reasons">
+
+      <div className="tip">
+        <p className="tip-title">Ada's tip</p>
+        <p>{verdict.tip}</p>
+      </div>
+
+      <ReppoBadge reppo={verdict.reppo} confirmed={confirmed} demo={verdict.demo} />
+
+      <details className="evidence">
+        <summary>Where this range comes from</summary>
+        <ul>
+          <li>
+            Based on {verdict.officialCount} official figure{verdict.officialCount === 1 ? "" : "s"} and {verdict.observationCount} confirmed payment
+            {verdict.observationCount === 1 ? "" : "s"}, using {FALLBACK_NOTE[verdict.fallback] ?? verdict.fallback}
+          </li>
           {verdict.quotes.map((q) => (
             <li key={q}>{q}</li>
           ))}
+          <li>
+            {verdict.demo
+              ? "Demo mode: the verdict uses the code band and seeded data"
+              : verdict.servAvailable
+                ? "Verdict and tip written by SERV Reasoning, checked against the code band"
+                : "SERV Reasoning was unavailable, so this uses the code band only"}
+          </li>
         </ul>
-      ) : null}
+      </details>
 
-      <p className="tip"><strong>Negotiation tip. </strong>{verdict.tip}</p>
-
-      {!verdict.servAvailable && !verdict.demo ? (
-        <p className="footnote">The judgment service was unavailable, so this result uses the local price band only{verdict.servError ? ` (${verdict.servError})` : "."}</p>
-      ) : null}
-      {verdict.reppo ? (
-        <p className="footnote">
-          Reppo eval {verdict.reppo.evalId}: {verdict.reppo.status}
-          {verdict.reppo.score != null ? `, score ${verdict.reppo.score}` : ""}
-          {verdict.reppo.decision ? `, ${verdict.reppo.decision}` : ""}
-          {verdict.reppo.route ? ` via ${verdict.reppo.route}` : ""}.
-        </p>
-      ) : null}
-
-      <div className="form-grid" style={{ marginTop: 16 }}>
-        <label>
-          <span>Confirm what you paid, in naira</span>
-          <input inputMode="decimal" value={paid} onChange={(e) => setPaid(e.target.value)} />
-        </label>
-        <motion.button type="button" className="btn btn-leaf btn-lg" disabled={busy} whileTap={reduce ? undefined : { scale: 0.96 }} onClick={() => send("paid")}>
-          I paid this
-        </motion.button>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <button type="button" className="btn" disabled={busy} onClick={() => send("fair")}>Looks fair</button>
-          <button type="button" className="btn" disabled={busy} onClick={() => send("not-fair")}>Looks off</button>
+      <section className="confirm" aria-labelledby={`${ids}-confirm`}>
+        <h3 id={`${ids}-confirm`}>Did you buy it</h3>
+        <div className="confirm-row">
+          <div className="money-input">
+            <span aria-hidden="true">₦</span>
+            <input
+              aria-label="Amount you paid, in naira"
+              inputMode="numeric"
+              value={paid}
+              onChange={(e) => setPaid(e.target.value)}
+              disabled={busy || confirmed}
+            />
+          </div>
+          <button type="button" className="btn btn-leaf" disabled={busy || confirmed} onClick={() => void send("paid")}>
+            I paid this
+          </button>
         </div>
-        {note ? <p className="hint">{note}</p> : null}
-      </div>
-      <p className="footnote">{verdict.disclaimer}</p>
+        {!confirmed ? (
+          <div className="quiet-actions">
+            <span className="muted">Or just tell Ada:</span>
+            <button type="button" className="link-btn" disabled={busy} onClick={() => void send("fair")}>
+              Looks fair
+            </button>
+            <button type="button" className="link-btn" disabled={busy} onClick={() => void send("not-fair")}>
+              Looks off
+            </button>
+          </div>
+        ) : null}
+        {note ? (
+          <p className={`note note-${note.tone}`} role="status">
+            {note.text}
+          </p>
+        ) : null}
+      </section>
     </motion.article>
   );
 }

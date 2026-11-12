@@ -1,0 +1,1329 @@
+{
+  "version": "2026-11-12.1",
+  "asOf": "2026-11-12",
+  "labelRule": "A quote is fair within 15% of the reference price, high above that, low below it. Labels come from this rule and the reference price only, never from the engine.",
+  "method": [
+    "Each case pairs an item and area with a reference price from a public, citable source (NBS series already cited in the seed, or a dated press or listing report), then sets quotes at fixed multiples of that reference and rounds them the way traders quote.",
+    "NBS raw workbooks are not copied. Official references are single headline figures already transcribed and cited in data/seed.json, or quoted in NBS press summaries.",
+    "Control cases (food and fares) reuse the same NBS figure the seed holds, so they only test band maths and zone fallback. Stale-anchor cases (petrol, cooking gas) and no-anchor cases (sachet water, phone screens, rent, haircuts) are where feedback can matter.",
+    "Cases are split by a hash of the case id: about 30% dev, 70% held-out test. Engine parameters (15% band, trust weights, outlier rules) were frozen before the benchmark was built and were not tuned on either split.",
+    "After-feedback runs feed a simulated stream of paid confirmations through the real anti-gaming gate. The stream is generated from the reference price with noise, plus duplicate and outlier attempts; it never sees the quotes or labels. See shared/benchmark.ts.",
+    "Reference prices from press and listing aggregates are estimates, not audited field surveys. Treat the numbers as a reproducible sanity check, not a market study."
+  ],
+  "sources": [
+    {
+      "id": "nbs-food-2026-05",
+      "title": "NBS Selected Food Price Watch, May 2026",
+      "url": "https://microdata.nigerianstat.gov.ng/index.php/catalog/162",
+      "published": "2026-06",
+      "kind": "official",
+      "note": "Zonal and national averages already cited in data/seed.json. Used as the reference for food control cases."
+    },
+    {
+      "id": "nbs-fare-2026-05",
+      "title": "NBS Transport Fare Watch, May 2026",
+      "url": "https://microdata.nigerianstat.gov.ng/index.php/catalog/161",
+      "published": "2026-06",
+      "kind": "official",
+      "note": "State averages already cited in data/seed.json. Used as the reference for fare control cases."
+    },
+    {
+      "id": "pms-nov-2026-abuja",
+      "title": "Legit.ng: NNPC, MRS and other stations reduce petrol prices (Abuja ₦1,325 to ₦1,420 per litre)",
+      "url": "https://www.legit.ng/business-economy/energy/1740285-relief-nnpc-filling-stations-reduce-petrol-prices/",
+      "published": "2026-11",
+      "kind": "press",
+      "note": "Station checks in Abuja in early November 2026. Reference set to ₦1,380, the middle of the reported band."
+    },
+    {
+      "id": "pms-nov-2026-national",
+      "title": "Finelib: Petrol price in Nigeria, November 2026 (₦1,325 to ₦1,429 per litre)",
+      "url": "https://www.finelib.com/knowledge/prices/products/Finelib-Prices-Petrol-PMS-Nigeria-Reference-v1.html",
+      "published": "2026-11",
+      "kind": "press",
+      "note": "Aggregates six dated November 2026 reports. Reference set to ₦1,375."
+    },
+    {
+      "id": "pms-nov-2026-kano",
+      "title": "Punch via ST Office fuel tracker: petrol about ₦1,420 per litre in Kano (11 Nov 2026)",
+      "url": "https://seyitinubu.com/fuel-price",
+      "published": "2026-11-11",
+      "kind": "press",
+      "note": "Single dated report. Reference set to ₦1,420."
+    },
+    {
+      "id": "lpg-oct-2026",
+      "title": "LPG in Nigeria: 12.5 kg cylinder averages ₦18,593.75 in October 2026",
+      "url": "https://www.lpginnigeria.com/details/nigerias-cooking-gas-prices-rise-by-555-in-october-as-125kg-cylinder-averages-n1859375",
+      "published": "2026-11",
+      "kind": "press",
+      "note": "National average with a reported spread of ₦16,250 to ₦21,250. Applied to states inside that spread; the April NBS anchor in the seed is older and higher."
+    },
+    {
+      "id": "water-kano",
+      "title": "Daily Trust: price of sachet water surges to ₦350 per bag in Kano",
+      "url": "https://dailytrust.com/price-of-sachet-water-surges-to-n350-per-bag-in-kano/",
+      "published": "2026",
+      "kind": "press",
+      "note": "₦300 to ₦350 per bag. Reference ₦325."
+    },
+    {
+      "id": "water-ibadan",
+      "title": "The AWB News: sachet water prices in Ibadan (about ₦400 per bag)",
+      "url": "https://theawbnews.com/sachet-water-prices-ibadan-nigeria/",
+      "published": "2026",
+      "kind": "press",
+      "note": "Retailers and buyers report about ₦400 per bag (Ibadan bags hold 16 sachets). Reference ₦400."
+    },
+    {
+      "id": "water-abuja",
+      "title": "NAN: unstable power threatens sachet water sellers (Abuja trader sells at ₦600)",
+      "url": "https://nannews.ng/unstable-power-threatens-sachet-water-ice-sellers-businesses/",
+      "published": "2026",
+      "kind": "press",
+      "note": "One trader's price, so a thin reference. Reference ₦600."
+    },
+    {
+      "id": "barber-2026",
+      "title": "TrustAm barber price guide 2026 (city ranges for a basic cut)",
+      "url": "https://www.trustamai.com/tools/barber-haircut-price-calculator",
+      "published": "2026",
+      "kind": "listing-aggregate",
+      "note": "Abuja ₦875 to ₦2,000, Port Harcourt ₦770 to ₦1,760, other cities ₦560 to ₦1,440. References at roughly the middle: ₦1,400, ₦1,250 and ₦1,000."
+    },
+    {
+      "id": "screen-2026",
+      "title": "Carlcare screen price lists and TechView Africa repair cost survey (budget Android screens)",
+      "url": "https://techviewafrica.com/articles/we-checked-what-it-costs-to-repair-20-popular-smartphones-in-nigeria-screens-are-the-expensive-part",
+      "published": "2026",
+      "kind": "listing-aggregate",
+      "note": "Budget TECNO and Infinix displays about ₦19,000 to ₦21,300 before fitting; general shop screen jobs from ₦25,000. Reference ₦20,000 for a typical budget-Android screen job, applied nationally."
+    },
+    {
+      "id": "rent-ibadan",
+      "title": "TrustAm: living on ₦100,000 in Ibadan in 2026 (room rent ₦15,000 to ₦21,000 a month)",
+      "url": "https://www.trustamai.com/blog/how-to-survive-on-naira100000-in-ibadan-in-2026",
+      "published": "2026",
+      "kind": "listing-aggregate",
+      "note": "Single room at the lower end of the quoted band. Reference ₦15,000 a month."
+    },
+    {
+      "id": "rent-enugu",
+      "title": "Mushrooms: single rooms for rent in Enugu (₦100,000 to ₦180,000 a year typical)",
+      "url": "https://mushrooms.ng/rent/enugu/single-rooms-for-rent",
+      "published": "2026",
+      "kind": "listing-aggregate",
+      "note": "Typical band converted to ₦8,300 to ₦15,000 a month. Reference ₦11,500."
+    },
+    {
+      "id": "rent-port-harcourt",
+      "title": "Mushrooms: student housing near UNIPORT and RSU (single room ₦100,000 to ₦250,000 a year)",
+      "url": "https://mushrooms.ng/blog/student-housing-uniport-port-harcourt-guide",
+      "published": "2026",
+      "kind": "listing-aggregate",
+      "note": "Converted to about ₦8,300 to ₦20,800 a month. Reference ₦14,500."
+    }
+  ],
+  "truths": [
+    {
+      "itemId": "rice-local",
+      "areaId": "NG",
+      "truthNaira": 1905.43,
+      "source": "nbs-food-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for Nigeria (national); the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "rice-local",
+      "areaId": "NG-KANO",
+      "truthNaira": 1895.4,
+      "source": "nbs-food-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for North West; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "rice-local",
+      "areaId": "NG-ENUGU",
+      "truthNaira": 2032.13,
+      "source": "nbs-food-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for South East; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "rice-imported",
+      "areaId": "NG-ABUJA",
+      "truthNaira": 2519.93,
+      "source": "nbs-food-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for North Central; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "beans-brown",
+      "areaId": "NG-BAUCHI",
+      "truthNaira": 876.46,
+      "source": "nbs-food-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for North East; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "beans-brown",
+      "areaId": "NG-OYO",
+      "truthNaira": 1790.71,
+      "source": "nbs-food-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for South West; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "garri-white",
+      "areaId": "NG-RIVERS",
+      "truthNaira": 944.01,
+      "source": "nbs-food-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for South South; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "garri-white",
+      "areaId": "NG-KADUNA",
+      "truthNaira": 797.6,
+      "source": "nbs-food-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for North West; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "tomatoes",
+      "areaId": "NG-ENUGU",
+      "truthNaira": 1838.4,
+      "source": "nbs-food-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for South East; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "tomatoes",
+      "areaId": "NG-OYO",
+      "truthNaira": 1747.05,
+      "source": "nbs-food-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for South West; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "yam",
+      "areaId": "NG-ABUJA",
+      "truthNaira": 2119.73,
+      "source": "nbs-food-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for North Central; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "yam",
+      "areaId": "NG-KANO",
+      "truthNaira": 2234.32,
+      "source": "nbs-food-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for North West; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "palm-oil",
+      "areaId": "NG-RIVERS",
+      "truthNaira": 2365.5,
+      "source": "nbs-food-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for South South; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "palm-oil",
+      "areaId": "NG-OYO",
+      "truthNaira": 2571.85,
+      "source": "nbs-food-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for South West; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "bus-city",
+      "areaId": "NG-KANO",
+      "truthNaira": 1066,
+      "source": "nbs-fare-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for Kano; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "bus-city",
+      "areaId": "NG-ENUGU",
+      "truthNaira": 1664.09,
+      "source": "nbs-fare-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for Enugu; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "okada",
+      "areaId": "NG-KADUNA",
+      "truthNaira": 1720.76,
+      "source": "nbs-fare-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for Kaduna; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "okada",
+      "areaId": "NG-RIVERS",
+      "truthNaira": 1298.26,
+      "source": "nbs-fare-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for Rivers; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "okada",
+      "areaId": "NG-BAUCHI",
+      "truthNaira": 937.37,
+      "source": "nbs-fare-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for Bauchi; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "bus-intercity",
+      "areaId": "NG-ABUJA",
+      "truthNaira": 11024.94,
+      "source": "nbs-fare-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for Abuja; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "bus-intercity",
+      "areaId": "NG-OYO",
+      "truthNaira": 9143.81,
+      "source": "nbs-fare-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for Oyo; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "bus-intercity",
+      "areaId": "NG-KANO",
+      "truthNaira": 9410.81,
+      "source": "nbs-fare-2026-05",
+      "reasoning": "Control case. Reference is the published NBS figure for Kano; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "itemId": "pms",
+      "areaId": "NG-ABUJA",
+      "truthNaira": 1380,
+      "source": "pms-nov-2026-abuja",
+      "reasoning": "Pump prices fell after the May 2026 NBS reading; a November 2026 report is the reference, so the seed anchor is about 14 to 16 percent high."
+    },
+    {
+      "itemId": "pms",
+      "areaId": "NG-KANO",
+      "truthNaira": 1420,
+      "source": "pms-nov-2026-kano",
+      "reasoning": "Pump prices fell after the May 2026 NBS reading; a November 2026 report is the reference, so the seed anchor is about 14 to 16 percent high."
+    },
+    {
+      "itemId": "pms",
+      "areaId": "NG",
+      "truthNaira": 1375,
+      "source": "pms-nov-2026-national",
+      "reasoning": "Pump prices fell after the May 2026 NBS reading; a November 2026 report is the reference, so the seed anchor is about 14 to 16 percent high."
+    },
+    {
+      "itemId": "lpg-12kg",
+      "areaId": "NG",
+      "truthNaira": 18594,
+      "source": "lpg-oct-2026",
+      "reasoning": "Cooking gas eased from the April 2026 NBS reading of about ₦22,400 to an October 2026 national average near ₦18,600; the October figure is the reference."
+    },
+    {
+      "itemId": "lpg-12kg",
+      "areaId": "NG-KANO",
+      "truthNaira": 18594,
+      "source": "lpg-oct-2026",
+      "reasoning": "Cooking gas eased from the April 2026 NBS reading of about ₦22,400 to an October 2026 national average near ₦18,600; the October figure is the reference."
+    },
+    {
+      "itemId": "lpg-12kg",
+      "areaId": "NG-ABUJA",
+      "truthNaira": 18594,
+      "source": "lpg-oct-2026",
+      "reasoning": "Cooking gas eased from the April 2026 NBS reading of about ₦22,400 to an October 2026 national average near ₦18,600; the October figure is the reference."
+    },
+    {
+      "itemId": "lpg-12kg",
+      "areaId": "NG-ENUGU",
+      "truthNaira": 18594,
+      "source": "lpg-oct-2026",
+      "reasoning": "Cooking gas eased from the April 2026 NBS reading of about ₦22,400 to an October 2026 national average near ₦18,600; the October figure is the reference."
+    },
+    {
+      "itemId": "lpg-12kg",
+      "areaId": "NG-RIVERS",
+      "truthNaira": 18594,
+      "source": "lpg-oct-2026",
+      "reasoning": "Cooking gas eased from the April 2026 NBS reading of about ₦22,400 to an October 2026 national average near ₦18,600; the October figure is the reference."
+    },
+    {
+      "itemId": "lpg-12kg",
+      "areaId": "NG-OYO",
+      "truthNaira": 18594,
+      "source": "lpg-oct-2026",
+      "reasoning": "Cooking gas eased from the April 2026 NBS reading of about ₦22,400 to an October 2026 national average near ₦18,600; the October figure is the reference."
+    },
+    {
+      "itemId": "pure-water",
+      "areaId": "NG-KANO",
+      "truthNaira": 325,
+      "source": "water-kano",
+      "reasoning": "No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "itemId": "pure-water",
+      "areaId": "NG-OYO",
+      "truthNaira": 400,
+      "source": "water-ibadan",
+      "reasoning": "No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "itemId": "pure-water",
+      "areaId": "NG-ABUJA",
+      "truthNaira": 600,
+      "source": "water-abuja",
+      "reasoning": "No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "itemId": "phone-screen",
+      "areaId": "NG-ABUJA",
+      "truthNaira": 20000,
+      "source": "screen-2026",
+      "reasoning": "No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "itemId": "phone-screen",
+      "areaId": "NG-KANO",
+      "truthNaira": 20000,
+      "source": "screen-2026",
+      "reasoning": "No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "itemId": "phone-screen",
+      "areaId": "NG-ENUGU",
+      "truthNaira": 20000,
+      "source": "screen-2026",
+      "reasoning": "No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "itemId": "phone-screen",
+      "areaId": "NG-RIVERS",
+      "truthNaira": 20000,
+      "source": "screen-2026",
+      "reasoning": "No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "itemId": "phone-screen",
+      "areaId": "NG-OYO",
+      "truthNaira": 20000,
+      "source": "screen-2026",
+      "reasoning": "No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "itemId": "room-rent",
+      "areaId": "NG-OYO",
+      "truthNaira": 15000,
+      "source": "rent-ibadan",
+      "reasoning": "No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "itemId": "room-rent",
+      "areaId": "NG-ENUGU",
+      "truthNaira": 11500,
+      "source": "rent-enugu",
+      "reasoning": "No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "itemId": "room-rent",
+      "areaId": "NG-RIVERS",
+      "truthNaira": 14500,
+      "source": "rent-port-harcourt",
+      "reasoning": "No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "itemId": "barbing",
+      "areaId": "NG-ABUJA",
+      "truthNaira": 1400,
+      "source": "barber-2026",
+      "reasoning": "No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "itemId": "barbing",
+      "areaId": "NG-RIVERS",
+      "truthNaira": 1250,
+      "source": "barber-2026",
+      "reasoning": "No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "itemId": "barbing",
+      "areaId": "NG-KANO",
+      "truthNaira": 1000,
+      "source": "barber-2026",
+      "reasoning": "No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "itemId": "barbing",
+      "areaId": "NG-OYO",
+      "truthNaira": 1000,
+      "source": "barber-2026",
+      "reasoning": "No NBS series covers this, so the seed alone can only say uncertain."
+    }
+  ],
+  "cases": [
+    {
+      "id": "bm-rice-local-national-1900",
+      "itemId": "rice-local",
+      "areaId": "NG",
+      "quoteNaira": 1900,
+      "expected": "fair",
+      "trueNaira": 1905.43,
+      "category": "food",
+      "split": "test",
+      "truthSource": "nbs-food-2026-05",
+      "note": "Local short-grained rice in Nigeria (national): quote ₦1,900 vs reference ₦1,905 (0%), so fair. Control case. Reference is the published NBS figure for Nigeria (national); the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-rice-local-national-2800",
+      "itemId": "rice-local",
+      "areaId": "NG",
+      "quoteNaira": 2800,
+      "expected": "high",
+      "trueNaira": 1905.43,
+      "category": "food",
+      "split": "dev",
+      "truthSource": "nbs-food-2026-05",
+      "note": "Local short-grained rice in Nigeria (national): quote ₦2,800 vs reference ₦1,905 (47%), so high. Control case. Reference is the published NBS figure for Nigeria (national); the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-rice-local-kano-2600",
+      "itemId": "rice-local",
+      "areaId": "NG-KANO",
+      "quoteNaira": 2600,
+      "expected": "high",
+      "trueNaira": 1895.4,
+      "category": "food",
+      "split": "test",
+      "truthSource": "nbs-food-2026-05",
+      "note": "Local short-grained rice in Kano: quote ₦2,600 vs reference ₦1,895 (37%), so high. Control case. Reference is the published NBS figure for North West; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-rice-local-enugu-1300",
+      "itemId": "rice-local",
+      "areaId": "NG-ENUGU",
+      "quoteNaira": 1300,
+      "expected": "low",
+      "trueNaira": 2032.13,
+      "category": "food",
+      "split": "dev",
+      "truthSource": "nbs-food-2026-05",
+      "note": "Local short-grained rice in Enugu: quote ₦1,300 vs reference ₦2,032 (-36%), so low. Control case. Reference is the published NBS figure for South East; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-rice-imported-abuja-2500",
+      "itemId": "rice-imported",
+      "areaId": "NG-ABUJA",
+      "quoteNaira": 2500,
+      "expected": "fair",
+      "trueNaira": 2519.93,
+      "category": "food",
+      "split": "test",
+      "truthSource": "nbs-food-2026-05",
+      "note": "Imported long-grained rice in Abuja: quote ₦2,500 vs reference ₦2,520 (-1%), so fair. Control case. Reference is the published NBS figure for North Central; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-rice-imported-abuja-1750",
+      "itemId": "rice-imported",
+      "areaId": "NG-ABUJA",
+      "quoteNaira": 1750,
+      "expected": "low",
+      "trueNaira": 2519.93,
+      "category": "food",
+      "split": "test",
+      "truthSource": "nbs-food-2026-05",
+      "note": "Imported long-grained rice in Abuja: quote ₦1,750 vs reference ₦2,520 (-31%), so low. Control case. Reference is the published NBS figure for North Central; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-beans-brown-bauchi-900",
+      "itemId": "beans-brown",
+      "areaId": "NG-BAUCHI",
+      "quoteNaira": 900,
+      "expected": "fair",
+      "trueNaira": 876.46,
+      "category": "food",
+      "split": "dev",
+      "truthSource": "nbs-food-2026-05",
+      "note": "Brown beans in Bauchi: quote ₦900 vs reference ₦876 (3%), so fair. Control case. Reference is the published NBS figure for North East; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-beans-brown-oyo-2400",
+      "itemId": "beans-brown",
+      "areaId": "NG-OYO",
+      "quoteNaira": 2400,
+      "expected": "high",
+      "trueNaira": 1790.71,
+      "category": "food",
+      "split": "test",
+      "truthSource": "nbs-food-2026-05",
+      "note": "Brown beans in Oyo: quote ₦2,400 vs reference ₦1,791 (34%), so high. Control case. Reference is the published NBS figure for South West; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-garri-white-rivers-950",
+      "itemId": "garri-white",
+      "areaId": "NG-RIVERS",
+      "quoteNaira": 950,
+      "expected": "fair",
+      "trueNaira": 944.01,
+      "category": "food",
+      "split": "test",
+      "truthSource": "nbs-food-2026-05",
+      "note": "White garri in Rivers: quote ₦950 vs reference ₦944 (1%), so fair. Control case. Reference is the published NBS figure for South South; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-garri-white-kaduna-550",
+      "itemId": "garri-white",
+      "areaId": "NG-KADUNA",
+      "quoteNaira": 550,
+      "expected": "low",
+      "trueNaira": 797.6,
+      "category": "food",
+      "split": "dev",
+      "truthSource": "nbs-food-2026-05",
+      "note": "White garri in Kaduna: quote ₦550 vs reference ₦798 (-31%), so low. Control case. Reference is the published NBS figure for North West; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-tomatoes-enugu-2600",
+      "itemId": "tomatoes",
+      "areaId": "NG-ENUGU",
+      "quoteNaira": 2600,
+      "expected": "high",
+      "trueNaira": 1838.4,
+      "category": "food",
+      "split": "test",
+      "truthSource": "nbs-food-2026-05",
+      "note": "Fresh tomatoes in Enugu: quote ₦2,600 vs reference ₦1,838 (41%), so high. Control case. Reference is the published NBS figure for South East; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-tomatoes-oyo-1700",
+      "itemId": "tomatoes",
+      "areaId": "NG-OYO",
+      "quoteNaira": 1700,
+      "expected": "fair",
+      "trueNaira": 1747.05,
+      "category": "food",
+      "split": "dev",
+      "truthSource": "nbs-food-2026-05",
+      "note": "Fresh tomatoes in Oyo: quote ₦1,700 vs reference ₦1,747 (-3%), so fair. Control case. Reference is the published NBS figure for South West; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-yam-abuja-2100",
+      "itemId": "yam",
+      "areaId": "NG-ABUJA",
+      "quoteNaira": 2100,
+      "expected": "fair",
+      "trueNaira": 2119.73,
+      "category": "food",
+      "split": "dev",
+      "truthSource": "nbs-food-2026-05",
+      "note": "Yam tuber in Abuja: quote ₦2,100 vs reference ₦2,120 (-1%), so fair. Control case. Reference is the published NBS figure for North Central; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-yam-kano-3200",
+      "itemId": "yam",
+      "areaId": "NG-KANO",
+      "quoteNaira": 3200,
+      "expected": "high",
+      "trueNaira": 2234.32,
+      "category": "food",
+      "split": "test",
+      "truthSource": "nbs-food-2026-05",
+      "note": "Yam tuber in Kano: quote ₦3,200 vs reference ₦2,234 (43%), so high. Control case. Reference is the published NBS figure for North West; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-palm-oil-rivers-1500",
+      "itemId": "palm-oil",
+      "areaId": "NG-RIVERS",
+      "quoteNaira": 1500,
+      "expected": "low",
+      "trueNaira": 2365.5,
+      "category": "food",
+      "split": "test",
+      "truthSource": "nbs-food-2026-05",
+      "note": "Palm oil in Rivers: quote ₦1,500 vs reference ₦2,366 (-37%), so low. Control case. Reference is the published NBS figure for South South; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-palm-oil-oyo-2500",
+      "itemId": "palm-oil",
+      "areaId": "NG-OYO",
+      "quoteNaira": 2500,
+      "expected": "fair",
+      "trueNaira": 2571.85,
+      "category": "food",
+      "split": "dev",
+      "truthSource": "nbs-food-2026-05",
+      "note": "Palm oil in Oyo: quote ₦2,500 vs reference ₦2,572 (-3%), so fair. Control case. Reference is the published NBS figure for South West; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-bus-city-kano-1000",
+      "itemId": "bus-city",
+      "areaId": "NG-KANO",
+      "quoteNaira": 1000,
+      "expected": "fair",
+      "trueNaira": 1066,
+      "category": "transport",
+      "split": "test",
+      "truthSource": "nbs-fare-2026-05",
+      "note": "Bus journey within a city, per drop in Kano: quote ₦1,000 vs reference ₦1,066 (-6%), so fair. Control case. Reference is the published NBS figure for Kano; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-bus-city-kano-1500",
+      "itemId": "bus-city",
+      "areaId": "NG-KANO",
+      "quoteNaira": 1500,
+      "expected": "high",
+      "trueNaira": 1066,
+      "category": "transport",
+      "split": "test",
+      "truthSource": "nbs-fare-2026-05",
+      "note": "Bus journey within a city, per drop in Kano: quote ₦1,500 vs reference ₦1,066 (41%), so high. Control case. Reference is the published NBS figure for Kano; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-bus-city-enugu-1700",
+      "itemId": "bus-city",
+      "areaId": "NG-ENUGU",
+      "quoteNaira": 1700,
+      "expected": "fair",
+      "trueNaira": 1664.09,
+      "category": "transport",
+      "split": "test",
+      "truthSource": "nbs-fare-2026-05",
+      "note": "Bus journey within a city, per drop in Enugu: quote ₦1,700 vs reference ₦1,664 (2%), so fair. Control case. Reference is the published NBS figure for Enugu; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-bus-city-enugu-1200",
+      "itemId": "bus-city",
+      "areaId": "NG-ENUGU",
+      "quoteNaira": 1200,
+      "expected": "low",
+      "trueNaira": 1664.09,
+      "category": "transport",
+      "split": "test",
+      "truthSource": "nbs-fare-2026-05",
+      "note": "Bus journey within a city, per drop in Enugu: quote ₦1,200 vs reference ₦1,664 (-28%), so low. Control case. Reference is the published NBS figure for Enugu; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-okada-kaduna-1700",
+      "itemId": "okada",
+      "areaId": "NG-KADUNA",
+      "quoteNaira": 1700,
+      "expected": "fair",
+      "trueNaira": 1720.76,
+      "category": "transport",
+      "split": "test",
+      "truthSource": "nbs-fare-2026-05",
+      "note": "Motorcycle (okada) journey, per drop in Kaduna: quote ₦1,700 vs reference ₦1,721 (-1%), so fair. Control case. Reference is the published NBS figure for Kaduna; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-okada-kaduna-1200",
+      "itemId": "okada",
+      "areaId": "NG-KADUNA",
+      "quoteNaira": 1200,
+      "expected": "low",
+      "trueNaira": 1720.76,
+      "category": "transport",
+      "split": "test",
+      "truthSource": "nbs-fare-2026-05",
+      "note": "Motorcycle (okada) journey, per drop in Kaduna: quote ₦1,200 vs reference ₦1,721 (-30%), so low. Control case. Reference is the published NBS figure for Kaduna; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-okada-rivers-2000",
+      "itemId": "okada",
+      "areaId": "NG-RIVERS",
+      "quoteNaira": 2000,
+      "expected": "high",
+      "trueNaira": 1298.26,
+      "category": "transport",
+      "split": "test",
+      "truthSource": "nbs-fare-2026-05",
+      "note": "Motorcycle (okada) journey, per drop in Rivers: quote ₦2,000 vs reference ₦1,298 (54%), so high. Control case. Reference is the published NBS figure for Rivers; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-okada-bauchi-900",
+      "itemId": "okada",
+      "areaId": "NG-BAUCHI",
+      "quoteNaira": 900,
+      "expected": "fair",
+      "trueNaira": 937.37,
+      "category": "transport",
+      "split": "dev",
+      "truthSource": "nbs-fare-2026-05",
+      "note": "Motorcycle (okada) journey, per drop in Bauchi: quote ₦900 vs reference ₦937 (-4%), so fair. Control case. Reference is the published NBS figure for Bauchi; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-bus-intercity-abuja-11000",
+      "itemId": "bus-intercity",
+      "areaId": "NG-ABUJA",
+      "quoteNaira": 11000,
+      "expected": "fair",
+      "trueNaira": 11024.94,
+      "category": "transport",
+      "split": "dev",
+      "truthSource": "nbs-fare-2026-05",
+      "note": "Intercity bus, state route, per person in Abuja: quote ₦11,000 vs reference ₦11,025 (0%), so fair. Control case. Reference is the published NBS figure for Abuja; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-bus-intercity-abuja-15000",
+      "itemId": "bus-intercity",
+      "areaId": "NG-ABUJA",
+      "quoteNaira": 15000,
+      "expected": "high",
+      "trueNaira": 11024.94,
+      "category": "transport",
+      "split": "dev",
+      "truthSource": "nbs-fare-2026-05",
+      "note": "Intercity bus, state route, per person in Abuja: quote ₦15,000 vs reference ₦11,025 (36%), so high. Control case. Reference is the published NBS figure for Abuja; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-bus-intercity-oyo-6500",
+      "itemId": "bus-intercity",
+      "areaId": "NG-OYO",
+      "quoteNaira": 6500,
+      "expected": "low",
+      "trueNaira": 9143.81,
+      "category": "transport",
+      "split": "dev",
+      "truthSource": "nbs-fare-2026-05",
+      "note": "Intercity bus, state route, per person in Oyo: quote ₦6,500 vs reference ₦9,144 (-29%), so low. Control case. Reference is the published NBS figure for Oyo; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-bus-intercity-kano-9500",
+      "itemId": "bus-intercity",
+      "areaId": "NG-KANO",
+      "quoteNaira": 9500,
+      "expected": "fair",
+      "trueNaira": 9410.81,
+      "category": "transport",
+      "split": "dev",
+      "truthSource": "nbs-fare-2026-05",
+      "note": "Intercity bus, state route, per person in Kano: quote ₦9,500 vs reference ₦9,411 (1%), so fair. Control case. Reference is the published NBS figure for Kano; the seed holds the same anchor, so this tests the band and fallback maths rather than freshness."
+    },
+    {
+      "id": "bm-pms-abuja-1400",
+      "itemId": "pms",
+      "areaId": "NG-ABUJA",
+      "quoteNaira": 1400,
+      "expected": "fair",
+      "trueNaira": 1380,
+      "category": "fuel",
+      "split": "test",
+      "truthSource": "pms-nov-2026-abuja",
+      "note": "Petrol (premium motor spirit) in Abuja: quote ₦1,400 vs reference ₦1,380 (1%), so fair. Pump prices fell after the May 2026 NBS reading; a November 2026 report is the reference, so the seed anchor is about 14 to 16 percent high."
+    },
+    {
+      "id": "bm-pms-abuja-1300",
+      "itemId": "pms",
+      "areaId": "NG-ABUJA",
+      "quoteNaira": 1300,
+      "expected": "fair",
+      "trueNaira": 1380,
+      "category": "fuel",
+      "split": "dev",
+      "truthSource": "pms-nov-2026-abuja",
+      "note": "Petrol (premium motor spirit) in Abuja: quote ₦1,300 vs reference ₦1,380 (-6%), so fair. Pump prices fell after the May 2026 NBS reading; a November 2026 report is the reference, so the seed anchor is about 14 to 16 percent high."
+    },
+    {
+      "id": "bm-pms-abuja-1700",
+      "itemId": "pms",
+      "areaId": "NG-ABUJA",
+      "quoteNaira": 1700,
+      "expected": "high",
+      "trueNaira": 1380,
+      "category": "fuel",
+      "split": "test",
+      "truthSource": "pms-nov-2026-abuja",
+      "note": "Petrol (premium motor spirit) in Abuja: quote ₦1,700 vs reference ₦1,380 (23%), so high. Pump prices fell after the May 2026 NBS reading; a November 2026 report is the reference, so the seed anchor is about 14 to 16 percent high."
+    },
+    {
+      "id": "bm-pms-kano-1400",
+      "itemId": "pms",
+      "areaId": "NG-KANO",
+      "quoteNaira": 1400,
+      "expected": "fair",
+      "trueNaira": 1420,
+      "category": "fuel",
+      "split": "dev",
+      "truthSource": "pms-nov-2026-kano",
+      "note": "Petrol (premium motor spirit) in Kano: quote ₦1,400 vs reference ₦1,420 (-1%), so fair. Pump prices fell after the May 2026 NBS reading; a November 2026 report is the reference, so the seed anchor is about 14 to 16 percent high."
+    },
+    {
+      "id": "bm-pms-kano-1300",
+      "itemId": "pms",
+      "areaId": "NG-KANO",
+      "quoteNaira": 1300,
+      "expected": "fair",
+      "trueNaira": 1420,
+      "category": "fuel",
+      "split": "test",
+      "truthSource": "pms-nov-2026-kano",
+      "note": "Petrol (premium motor spirit) in Kano: quote ₦1,300 vs reference ₦1,420 (-8%), so fair. Pump prices fell after the May 2026 NBS reading; a November 2026 report is the reference, so the seed anchor is about 14 to 16 percent high."
+    },
+    {
+      "id": "bm-pms-kano-1850",
+      "itemId": "pms",
+      "areaId": "NG-KANO",
+      "quoteNaira": 1850,
+      "expected": "high",
+      "trueNaira": 1420,
+      "category": "fuel",
+      "split": "test",
+      "truthSource": "pms-nov-2026-kano",
+      "note": "Petrol (premium motor spirit) in Kano: quote ₦1,850 vs reference ₦1,420 (30%), so high. Pump prices fell after the May 2026 NBS reading; a November 2026 report is the reference, so the seed anchor is about 14 to 16 percent high."
+    },
+    {
+      "id": "bm-pms-national-1350",
+      "itemId": "pms",
+      "areaId": "NG",
+      "quoteNaira": 1350,
+      "expected": "fair",
+      "trueNaira": 1375,
+      "category": "fuel",
+      "split": "dev",
+      "truthSource": "pms-nov-2026-national",
+      "note": "Petrol (premium motor spirit) in Nigeria (national): quote ₦1,350 vs reference ₦1,375 (-2%), so fair. Pump prices fell after the May 2026 NBS reading; a November 2026 report is the reference, so the seed anchor is about 14 to 16 percent high."
+    },
+    {
+      "id": "bm-pms-national-1100",
+      "itemId": "pms",
+      "areaId": "NG",
+      "quoteNaira": 1100,
+      "expected": "low",
+      "trueNaira": 1375,
+      "category": "fuel",
+      "split": "test",
+      "truthSource": "pms-nov-2026-national",
+      "note": "Petrol (premium motor spirit) in Nigeria (national): quote ₦1,100 vs reference ₦1,375 (-20%), so low. Pump prices fell after the May 2026 NBS reading; a November 2026 report is the reference, so the seed anchor is about 14 to 16 percent high."
+    },
+    {
+      "id": "bm-pms-national-1650",
+      "itemId": "pms",
+      "areaId": "NG",
+      "quoteNaira": 1650,
+      "expected": "high",
+      "trueNaira": 1375,
+      "category": "fuel",
+      "split": "test",
+      "truthSource": "pms-nov-2026-national",
+      "note": "Petrol (premium motor spirit) in Nigeria (national): quote ₦1,650 vs reference ₦1,375 (20%), so high. Pump prices fell after the May 2026 NBS reading; a November 2026 report is the reference, so the seed anchor is about 14 to 16 percent high."
+    },
+    {
+      "id": "bm-lpg-12kg-national-18600",
+      "itemId": "lpg-12kg",
+      "areaId": "NG",
+      "quoteNaira": 18600,
+      "expected": "fair",
+      "trueNaira": 18594,
+      "category": "fuel",
+      "split": "test",
+      "truthSource": "lpg-oct-2026",
+      "note": "Cooking gas refill (LPG) in Nigeria (national): quote ₦18,600 vs reference ₦18,594 (0%), so fair. Cooking gas eased from the April 2026 NBS reading of about ₦22,400 to an October 2026 national average near ₦18,600; the October figure is the reference."
+    },
+    {
+      "id": "bm-lpg-12kg-national-24000",
+      "itemId": "lpg-12kg",
+      "areaId": "NG",
+      "quoteNaira": 24000,
+      "expected": "high",
+      "trueNaira": 18594,
+      "category": "fuel",
+      "split": "dev",
+      "truthSource": "lpg-oct-2026",
+      "note": "Cooking gas refill (LPG) in Nigeria (national): quote ₦24,000 vs reference ₦18,594 (29%), so high. Cooking gas eased from the April 2026 NBS reading of about ₦22,400 to an October 2026 national average near ₦18,600; the October figure is the reference."
+    },
+    {
+      "id": "bm-lpg-12kg-national-13000",
+      "itemId": "lpg-12kg",
+      "areaId": "NG",
+      "quoteNaira": 13000,
+      "expected": "low",
+      "trueNaira": 18594,
+      "category": "fuel",
+      "split": "dev",
+      "truthSource": "lpg-oct-2026",
+      "note": "Cooking gas refill (LPG) in Nigeria (national): quote ₦13,000 vs reference ₦18,594 (-30%), so low. Cooking gas eased from the April 2026 NBS reading of about ₦22,400 to an October 2026 national average near ₦18,600; the October figure is the reference."
+    },
+    {
+      "id": "bm-lpg-12kg-kano-19500",
+      "itemId": "lpg-12kg",
+      "areaId": "NG-KANO",
+      "quoteNaira": 19500,
+      "expected": "fair",
+      "trueNaira": 18594,
+      "category": "fuel",
+      "split": "dev",
+      "truthSource": "lpg-oct-2026",
+      "note": "Cooking gas refill (LPG) in Kano: quote ₦19,500 vs reference ₦18,594 (5%), so fair. Cooking gas eased from the April 2026 NBS reading of about ₦22,400 to an October 2026 national average near ₦18,600; the October figure is the reference."
+    },
+    {
+      "id": "bm-lpg-12kg-abuja-20000",
+      "itemId": "lpg-12kg",
+      "areaId": "NG-ABUJA",
+      "quoteNaira": 20000,
+      "expected": "fair",
+      "trueNaira": 18594,
+      "category": "fuel",
+      "split": "test",
+      "truthSource": "lpg-oct-2026",
+      "note": "Cooking gas refill (LPG) in Abuja: quote ₦20,000 vs reference ₦18,594 (8%), so fair. Cooking gas eased from the April 2026 NBS reading of about ₦22,400 to an October 2026 national average near ₦18,600; the October figure is the reference."
+    },
+    {
+      "id": "bm-lpg-12kg-enugu-16900",
+      "itemId": "lpg-12kg",
+      "areaId": "NG-ENUGU",
+      "quoteNaira": 16900,
+      "expected": "fair",
+      "trueNaira": 18594,
+      "category": "fuel",
+      "split": "test",
+      "truthSource": "lpg-oct-2026",
+      "note": "Cooking gas refill (LPG) in Enugu: quote ₦16,900 vs reference ₦18,594 (-9%), so fair. Cooking gas eased from the April 2026 NBS reading of about ₦22,400 to an October 2026 national average near ₦18,600; the October figure is the reference."
+    },
+    {
+      "id": "bm-lpg-12kg-rivers-26000",
+      "itemId": "lpg-12kg",
+      "areaId": "NG-RIVERS",
+      "quoteNaira": 26000,
+      "expected": "high",
+      "trueNaira": 18594,
+      "category": "fuel",
+      "split": "test",
+      "truthSource": "lpg-oct-2026",
+      "note": "Cooking gas refill (LPG) in Rivers: quote ₦26,000 vs reference ₦18,594 (40%), so high. Cooking gas eased from the April 2026 NBS reading of about ₦22,400 to an October 2026 national average near ₦18,600; the October figure is the reference."
+    },
+    {
+      "id": "bm-lpg-12kg-oyo-12500",
+      "itemId": "lpg-12kg",
+      "areaId": "NG-OYO",
+      "quoteNaira": 12500,
+      "expected": "low",
+      "trueNaira": 18594,
+      "category": "fuel",
+      "split": "test",
+      "truthSource": "lpg-oct-2026",
+      "note": "Cooking gas refill (LPG) in Oyo: quote ₦12,500 vs reference ₦18,594 (-33%), so low. Cooking gas eased from the April 2026 NBS reading of about ₦22,400 to an October 2026 national average near ₦18,600; the October figure is the reference."
+    },
+    {
+      "id": "bm-pure-water-kano-300",
+      "itemId": "pure-water",
+      "areaId": "NG-KANO",
+      "quoteNaira": 300,
+      "expected": "fair",
+      "trueNaira": 325,
+      "category": "food",
+      "split": "dev",
+      "truthSource": "water-kano",
+      "note": "Sachet water (pure water) in Kano: quote ₦300 vs reference ₦325 (-8%), so fair. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-pure-water-kano-500",
+      "itemId": "pure-water",
+      "areaId": "NG-KANO",
+      "quoteNaira": 500,
+      "expected": "high",
+      "trueNaira": 325,
+      "category": "food",
+      "split": "test",
+      "truthSource": "water-kano",
+      "note": "Sachet water (pure water) in Kano: quote ₦500 vs reference ₦325 (54%), so high. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-pure-water-oyo-400",
+      "itemId": "pure-water",
+      "areaId": "NG-OYO",
+      "quoteNaira": 400,
+      "expected": "fair",
+      "trueNaira": 400,
+      "category": "food",
+      "split": "test",
+      "truthSource": "water-ibadan",
+      "note": "Sachet water (pure water) in Oyo: quote ₦400 vs reference ₦400 (0%), so fair. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-pure-water-oyo-600",
+      "itemId": "pure-water",
+      "areaId": "NG-OYO",
+      "quoteNaira": 600,
+      "expected": "high",
+      "trueNaira": 400,
+      "category": "food",
+      "split": "test",
+      "truthSource": "water-ibadan",
+      "note": "Sachet water (pure water) in Oyo: quote ₦600 vs reference ₦400 (50%), so high. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-pure-water-oyo-250",
+      "itemId": "pure-water",
+      "areaId": "NG-OYO",
+      "quoteNaira": 250,
+      "expected": "low",
+      "trueNaira": 400,
+      "category": "food",
+      "split": "dev",
+      "truthSource": "water-ibadan",
+      "note": "Sachet water (pure water) in Oyo: quote ₦250 vs reference ₦400 (-37%), so low. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-pure-water-abuja-600",
+      "itemId": "pure-water",
+      "areaId": "NG-ABUJA",
+      "quoteNaira": 600,
+      "expected": "fair",
+      "trueNaira": 600,
+      "category": "food",
+      "split": "dev",
+      "truthSource": "water-abuja",
+      "note": "Sachet water (pure water) in Abuja: quote ₦600 vs reference ₦600 (0%), so fair. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-pure-water-abuja-400",
+      "itemId": "pure-water",
+      "areaId": "NG-ABUJA",
+      "quoteNaira": 400,
+      "expected": "low",
+      "trueNaira": 600,
+      "category": "food",
+      "split": "test",
+      "truthSource": "water-abuja",
+      "note": "Sachet water (pure water) in Abuja: quote ₦400 vs reference ₦600 (-33%), so low. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-phone-screen-abuja-20000",
+      "itemId": "phone-screen",
+      "areaId": "NG-ABUJA",
+      "quoteNaira": 20000,
+      "expected": "fair",
+      "trueNaira": 20000,
+      "category": "repair",
+      "split": "test",
+      "truthSource": "screen-2026",
+      "note": "Phone screen replacement, popular Android in Abuja: quote ₦20,000 vs reference ₦20,000 (0%), so fair. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-phone-screen-abuja-22000",
+      "itemId": "phone-screen",
+      "areaId": "NG-ABUJA",
+      "quoteNaira": 22000,
+      "expected": "fair",
+      "trueNaira": 20000,
+      "category": "repair",
+      "split": "dev",
+      "truthSource": "screen-2026",
+      "note": "Phone screen replacement, popular Android in Abuja: quote ₦22,000 vs reference ₦20,000 (10%), so fair. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-phone-screen-kano-35000",
+      "itemId": "phone-screen",
+      "areaId": "NG-KANO",
+      "quoteNaira": 35000,
+      "expected": "high",
+      "trueNaira": 20000,
+      "category": "repair",
+      "split": "test",
+      "truthSource": "screen-2026",
+      "note": "Phone screen replacement, popular Android in Kano: quote ₦35,000 vs reference ₦20,000 (75%), so high. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-phone-screen-enugu-12000",
+      "itemId": "phone-screen",
+      "areaId": "NG-ENUGU",
+      "quoteNaira": 12000,
+      "expected": "low",
+      "trueNaira": 20000,
+      "category": "repair",
+      "split": "dev",
+      "truthSource": "screen-2026",
+      "note": "Phone screen replacement, popular Android in Enugu: quote ₦12,000 vs reference ₦20,000 (-40%), so low. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-phone-screen-rivers-18000",
+      "itemId": "phone-screen",
+      "areaId": "NG-RIVERS",
+      "quoteNaira": 18000,
+      "expected": "fair",
+      "trueNaira": 20000,
+      "category": "repair",
+      "split": "dev",
+      "truthSource": "screen-2026",
+      "note": "Phone screen replacement, popular Android in Rivers: quote ₦18,000 vs reference ₦20,000 (-10%), so fair. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-phone-screen-oyo-28000",
+      "itemId": "phone-screen",
+      "areaId": "NG-OYO",
+      "quoteNaira": 28000,
+      "expected": "high",
+      "trueNaira": 20000,
+      "category": "repair",
+      "split": "dev",
+      "truthSource": "screen-2026",
+      "note": "Phone screen replacement, popular Android in Oyo: quote ₦28,000 vs reference ₦20,000 (40%), so high. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-room-rent-oyo-15000",
+      "itemId": "room-rent",
+      "areaId": "NG-OYO",
+      "quoteNaira": 15000,
+      "expected": "fair",
+      "trueNaira": 15000,
+      "category": "rent",
+      "split": "test",
+      "truthSource": "rent-ibadan",
+      "note": "Single room monthly rent in Oyo: quote ₦15,000 vs reference ₦15,000 (0%), so fair. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-room-rent-oyo-25000",
+      "itemId": "room-rent",
+      "areaId": "NG-OYO",
+      "quoteNaira": 25000,
+      "expected": "high",
+      "trueNaira": 15000,
+      "category": "rent",
+      "split": "test",
+      "truthSource": "rent-ibadan",
+      "note": "Single room monthly rent in Oyo: quote ₦25,000 vs reference ₦15,000 (67%), so high. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-room-rent-enugu-12000",
+      "itemId": "room-rent",
+      "areaId": "NG-ENUGU",
+      "quoteNaira": 12000,
+      "expected": "fair",
+      "trueNaira": 11500,
+      "category": "rent",
+      "split": "dev",
+      "truthSource": "rent-enugu",
+      "note": "Single room monthly rent in Enugu: quote ₦12,000 vs reference ₦11,500 (4%), so fair. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-room-rent-enugu-7000",
+      "itemId": "room-rent",
+      "areaId": "NG-ENUGU",
+      "quoteNaira": 7000,
+      "expected": "low",
+      "trueNaira": 11500,
+      "category": "rent",
+      "split": "test",
+      "truthSource": "rent-enugu",
+      "note": "Single room monthly rent in Enugu: quote ₦7,000 vs reference ₦11,500 (-39%), so low. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-room-rent-enugu-20000",
+      "itemId": "room-rent",
+      "areaId": "NG-ENUGU",
+      "quoteNaira": 20000,
+      "expected": "high",
+      "trueNaira": 11500,
+      "category": "rent",
+      "split": "test",
+      "truthSource": "rent-enugu",
+      "note": "Single room monthly rent in Enugu: quote ₦20,000 vs reference ₦11,500 (74%), so high. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-room-rent-rivers-14900",
+      "itemId": "room-rent",
+      "areaId": "NG-RIVERS",
+      "quoteNaira": 14900,
+      "expected": "fair",
+      "trueNaira": 14500,
+      "category": "rent",
+      "split": "test",
+      "truthSource": "rent-port-harcourt",
+      "note": "Single room monthly rent in Rivers: quote ₦14,900 vs reference ₦14,500 (3%), so fair. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-room-rent-rivers-9000",
+      "itemId": "room-rent",
+      "areaId": "NG-RIVERS",
+      "quoteNaira": 9000,
+      "expected": "low",
+      "trueNaira": 14500,
+      "category": "rent",
+      "split": "test",
+      "truthSource": "rent-port-harcourt",
+      "note": "Single room monthly rent in Rivers: quote ₦9,000 vs reference ₦14,500 (-38%), so low. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-barbing-abuja-1500",
+      "itemId": "barbing",
+      "areaId": "NG-ABUJA",
+      "quoteNaira": 1500,
+      "expected": "fair",
+      "trueNaira": 1400,
+      "category": "service",
+      "split": "test",
+      "truthSource": "barber-2026",
+      "note": "Men's haircut at a barbing salon in Abuja: quote ₦1,500 vs reference ₦1,400 (7%), so fair. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-barbing-abuja-2500",
+      "itemId": "barbing",
+      "areaId": "NG-ABUJA",
+      "quoteNaira": 2500,
+      "expected": "high",
+      "trueNaira": 1400,
+      "category": "service",
+      "split": "dev",
+      "truthSource": "barber-2026",
+      "note": "Men's haircut at a barbing salon in Abuja: quote ₦2,500 vs reference ₦1,400 (79%), so high. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-barbing-rivers-1200",
+      "itemId": "barbing",
+      "areaId": "NG-RIVERS",
+      "quoteNaira": 1200,
+      "expected": "fair",
+      "trueNaira": 1250,
+      "category": "service",
+      "split": "test",
+      "truthSource": "barber-2026",
+      "note": "Men's haircut at a barbing salon in Rivers: quote ₦1,200 vs reference ₦1,250 (-4%), so fair. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-barbing-rivers-800",
+      "itemId": "barbing",
+      "areaId": "NG-RIVERS",
+      "quoteNaira": 800,
+      "expected": "low",
+      "trueNaira": 1250,
+      "category": "service",
+      "split": "test",
+      "truthSource": "barber-2026",
+      "note": "Men's haircut at a barbing salon in Rivers: quote ₦800 vs reference ₦1,250 (-36%), so low. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-barbing-kano-1000",
+      "itemId": "barbing",
+      "areaId": "NG-KANO",
+      "quoteNaira": 1000,
+      "expected": "fair",
+      "trueNaira": 1000,
+      "category": "service",
+      "split": "test",
+      "truthSource": "barber-2026",
+      "note": "Men's haircut at a barbing salon in Kano: quote ₦1,000 vs reference ₦1,000 (0%), so fair. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-barbing-kano-1500",
+      "itemId": "barbing",
+      "areaId": "NG-KANO",
+      "quoteNaira": 1500,
+      "expected": "high",
+      "trueNaira": 1000,
+      "category": "service",
+      "split": "test",
+      "truthSource": "barber-2026",
+      "note": "Men's haircut at a barbing salon in Kano: quote ₦1,500 vs reference ₦1,000 (50%), so high. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-barbing-oyo-600",
+      "itemId": "barbing",
+      "areaId": "NG-OYO",
+      "quoteNaira": 600,
+      "expected": "low",
+      "trueNaira": 1000,
+      "category": "service",
+      "split": "test",
+      "truthSource": "barber-2026",
+      "note": "Men's haircut at a barbing salon in Oyo: quote ₦600 vs reference ₦1,000 (-40%), so low. No NBS series covers this, so the seed alone can only say uncertain."
+    },
+    {
+      "id": "bm-barbing-oyo-1100",
+      "itemId": "barbing",
+      "areaId": "NG-OYO",
+      "quoteNaira": 1100,
+      "expected": "fair",
+      "trueNaira": 1000,
+      "category": "service",
+      "split": "test",
+      "truthSource": "barber-2026",
+      "note": "Men's haircut at a barbing salon in Oyo: quote ₦1,100 vs reference ₦1,000 (10%), so fair. No NBS series covers this, so the seed alone can only say uncertain."
+    }
+  ]
+}

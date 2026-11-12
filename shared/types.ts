@@ -6,7 +6,7 @@ export interface Item {
   id: string;
   name: string;
   unit: string;
-  category: "food" | "fuel" | "transport" | "repair" | "rent";
+  category: "food" | "fuel" | "transport" | "repair" | "rent" | "service";
   nbsLabel: string | null;
 }
 
@@ -56,6 +56,28 @@ export interface BenchmarkCase {
   expected: VerdictLabel;
   trueNaira: number | null;
   note: string;
+  split?: "dev" | "test";
+  truthSource?: string;
+  category?: Item["category"];
+}
+
+export interface BenchmarkSource {
+  id: string;
+  title: string;
+  url: string;
+  published: string;
+  kind: "official" | "press-report-of-official" | "press" | "listing-aggregate";
+  note: string;
+}
+
+export interface BenchmarkFile {
+  version: string;
+  asOf: string;
+  method: string[];
+  labelRule: string;
+  sources: BenchmarkSource[];
+  truths: Array<{ itemId: string; areaId: string; truthNaira: number; source: string; reasoning: string }>;
+  cases: BenchmarkCase[];
 }
 
 export interface SeedFile {
@@ -67,7 +89,7 @@ export interface SeedFile {
   areas: Area[];
   officialRefs: OfficialRef[];
   demoObservations: Array<Omit<Observation, "createdAt"> & { createdAt?: string }>;
-  benchmark: BenchmarkCase[];
+  benchmark?: BenchmarkCase[];
 }
 
 export interface EvidencePoint {
@@ -155,8 +177,10 @@ export interface ReppoRecord {
   route: string | null;
   reason: string | null;
   creditsCharged: number | null;
+  latencyMs?: number | null;
   createdAt: string;
   completedAt?: string;
+  lastPolledAt?: string;
 }
 
 export interface MetricSnapshot {

@@ -1,0 +1,87 @@
+{
+  "ranAt": "2026-11-12T16:34:45.375Z",
+  "input": {
+    "itemId": "tomatoes",
+    "areaId": "NG-KANO",
+    "quoteNaira": 1400,
+    "paidNaira": 1350
+  },
+  "health": {
+    "status": "ok",
+    "service": "fair-price",
+    "store": {
+      "kind": "pglite",
+      "durable": true,
+      "migrations": [
+        "001_init"
+      ]
+    },
+    "configured": {
+      "serv": true,
+      "reppo": true,
+      "telegram": true
+    }
+  },
+  "check": {
+    "httpMs": 10288,
+    "verdictId": "v-992fe167-0733-4e3e-865b-2bc9a45a9090",
+    "label": "high",
+    "range": {
+      "low": 1005.0315,
+      "mid": 1182.39,
+      "high": 1359.7485,
+      "unit": "1 kg",
+      "fallback": "local",
+      "sampleSize": 2
+    },
+    "servAvailable": true,
+    "servError": null,
+    "confidence": "medium",
+    "reasons": [
+      "The quoted price of ₦1,400 is above the computed high band of ₦1,360.",
+      "The official May 2026 figure is an average, not a live Kano stall quote.",
+      "A confirmed payment of ₦1,350 supports that prices are near the band, not above ₦1,400."
+    ],
+    "tip": "Try offering around ₦1,300 to ₦1,350 and ask if the seller can match the confirmed market price."
+  },
+  "feedback": {
+    "ok": true,
+    "feedbackId": "fb-ea2cd72d-9550-4fef-87e6-190d0ac9e829",
+    "observation": {
+      "id": "obs-2ed16d67-237a-4668-849b-c7d1f3381515",
+      "status": "accepted",
+      "reason": "ok"
+    },
+    "reppo": {
+      "state": "pending",
+      "message": "QUEUED"
+    }
+  },
+  "reppo": {
+    "evalId": "cmwdrp3mz000c08jvn6h3rkhy",
+    "status": "COMPLETED",
+    "state": "checked",
+    "score": 97,
+    "route": "ship",
+    "decision": "accept",
+    "reason": "The submission passed with a score of 97 due to near-perfect accuracy (99) and evidence (100) rubric scores, driven by strong alignment between the verdict's high-band logic and the confirmed payment of ₦1,350. The slightly lower precision score (89) reflects minor tension between the \"high\" verdict and the confirmed payment landing just below the quoted price, but no gates failed and consensus was strong."
+  },
+  "reppoStored": {
+    "eval": {
+      "evalId": "cmwdrp3mz000c08jvn6h3rkhy",
+      "verdictId": "v-992fe167-0733-4e3e-865b-2bc9a45a9090",
+      "taskType": "claim",
+      "status": "COMPLETED",
+      "score": 97,
+      "decision": "accept",
+      "route": "ship",
+      "reason": "The submission passed with a score of 97 due to near-perfect accuracy (99) and evidence (100) rubric scores, driven by strong alignment between the verdict's high-band logic and the confirmed payment of ₦1,350. The slightly lower precision score (89) reflects minor tension between the \"high\" verdict and the confirmed payment landing just below the quoted price, but no gates failed and consensus was strong.",
+      "creditsCharged": 440,
+      "latencyMs": 59242,
+      "createdAt": "2026-11-12T16:33:46.125Z",
+      "completedAt": "2026-11-12T16:34:45.367Z",
+      "lastPolledAt": "2026-11-12T16:34:45.367Z"
+    },
+    "source": "live"
+  }
+}

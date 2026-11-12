@@ -6,6 +6,16 @@ export interface Catalog {
   areas: Array<{ id: string; name: string; kind: string; state: string | null; zone: string | null }>;
 }
 
+export interface ReppoBadge {
+  evalId: string;
+  status: string | null;
+  state: "checked" | "pending" | "failed";
+  score: number | null;
+  route: string | null;
+  decision: string | null;
+  reason: string | null;
+}
+
 export interface PublicVerdict {
   id: string;
   itemId: string;
@@ -30,24 +40,88 @@ export interface PublicVerdict {
   servAvailable: boolean;
   servError: string | null;
   demo: boolean;
-  disclaimer: string;
-  reppo: {
-    evalId: string;
-    status: string | null;
-    score: number | null;
-    route: string | null;
-    decision: string | null;
-  } | null;
+  reppo: ReppoBadge | null;
   createdAt: string;
 }
 
+export interface BoardRow {
+  itemId: string;
+  itemName: string;
+  unit: string;
+  category: string;
+  mid: number | null;
+  low: number | null;
+  high: number | null;
+  fallback: string;
+  officialCount: number;
+  observationCount: number;
+  sampleSize: number;
+}
+
+export interface ScoreBlock {
+  cases: number;
+  correct: number;
+  accuracy: number;
+  answered: number;
+  coverage: number;
+  answeredAccuracy: number | null;
+  mape: number | null;
+}
+
+export interface Metrics {
+  generatedAt: string;
+  demo: boolean;
+  benchmark: {
+    version: string;
+    asOf: string;
+    totalCases: number;
+    splits: Record<"dev" | "test" | "all", { seedOnly: ScoreBlock; afterFeedback: ScoreBlock }>;
+    byCategory: Record<string, { seedOnly: ScoreBlock; afterFeedback: ScoreBlock }>;
+    feedback: { pairs: number; coveredPairs: number; submitted: number; accepted: number; quarantined: number; rejected: number };
+    labelRule: string;
+    method: string[];
+    sources: Array<{ id: string; title: string; url: string; published: string; kind: string; note: string }>;
+    results: Array<{
+      id: string;
+      itemId: string;
+      areaId: string;
+      category: string;
+      split: "dev" | "test";
+      quoteNaira: number;
+      expected: string;
+      seedOnly: string;
+      afterFeedback: string;
+    }>;
+  };
+  reppo: {
+    completed: number;
+    medianScore: number | null;
+    dailyCap: number;
+    evals: Array<{
+      evalId: string;
+      status: string;
+      score: number | null;
+      decision: string | null;
+      route: string | null;
+      reason: string | null;
+      creditsCharged: number | null;
+      latencyMs: number | null;
+      createdAt: string;
+      source: "demo" | "live";
+    }>;
+  };
+  live: { checks: number; paidConfirms: number; acceptedConfirms: number; quarantined: number; rejected: number };
+}
+
 async function json<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, {
-    ...init,
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
-  });
-  const body = (await response.json()) as T & { error?: string };
-  if (!response.ok) throw new Error(body.error ?? "The request failed.");
+  let response: Response;
+  try {
+    response = await fetch(path, { ...init, headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) } });
+  } catch {
+    throw new Error("You seem to be offline. Check your connection and try again.");
+  }
+  const body = (await response.json().catch(() => ({}))) as T & { error?: string };
+  if (!response.ok) throw new Error(body.error ?? "The request failed. Try again.");
   return body;
 }
 
@@ -61,63 +135,29 @@ export const api = {
     demo: boolean;
     source: "typed" | "photo-confirmed";
   }) => json<{ verdict: PublicVerdict }>("/api/check", { method: "POST", body: JSON.stringify(input) }),
-  verdict: (id: string) => json<{ verdict: PublicVerdict }>(`/api/verdict/${id}`),
+  verdict: (id: string) => json<{ verdict: PublicVerdict }>(`/api/verdict/${encodeURIComponent(id)}`),
   feedback: (input: { verdictId: string; kind: "paid" | "fair" | "not-fair"; paidNaira?: number; deviceId: string; demo: boolean }) =>
-    json<{ ok: boolean; observation: { id: string; status: string; reason: string | null } | null }>("/api/feedback", {
-      method: "POST",
-      body: JSON.stringify(input),
-    }),
-  board: (areaId: string) =>
     json<{
-      area: { id: string; name: string; kind: string };
-      areas: Catalog["areas"];
-      disclaimer: string;
-      rows: Array<{
-        itemId: string;
-        itemName: string;
-        unit: string;
-        category: string;
-        mid: number | null;
-        low: number | null;
-        high: number | null;
-        fallback: string;
-        officialCount: number;
-        observationCount: number;
-        sampleSize: number;
-      }>;
-    }>(`/api/board?areaId=${encodeURIComponent(areaId)}`),
-  metrics: (demo: boolean) => json<Metrics>(`/api/metrics?demo=${demo ? "true" : "false"}`),
+      ok: boolean;
+      observation: { id: string; status: string; reason: string | null } | null;
+      reppo: { state: string } | null;
+    }>("/api/feedback", { method: "POST", body: JSON.stringify(input) }),
+  board: (areaId: string, demo: boolean) =>
+    json<{ area: { id: string; name: string; kind: string }; areas: Catalog["areas"]; rows: BoardRow[] }>(
+      `/api/board?areaId=${encodeURIComponent(areaId)}&demo=${demo ? "1" : "0"}`,
+    ),
+  metrics: (demo: boolean) => json<Metrics>(`/api/metrics?demo=${demo ? "1" : "0"}`),
 };
 
-export interface Metrics {
-  generatedAt: string;
-  demo: boolean;
-  disclaimer: string;
-  seedOnly: MetricBlock;
-  afterFeedback: MetricBlock;
-  reppo: Array<{
-    evalId: string;
-    status: string;
-    score: number | null;
-    decision: string | null;
-    route: string | null;
-    reason: string | null;
-    creditsCharged: number | null;
-    verdictId: string;
-    source: string;
-  }>;
-  livePaidConfirms: number;
-  observationCount: number;
+export function naira(n: number): string {
+  return `₦${Math.round(n).toLocaleString("en-NG")}`;
 }
 
-export interface MetricBlock {
-  mode: string;
-  agreementRate: number;
-  cases: number;
-  agreed: number;
-  mape: number | null;
-  medianReppoScore: number | null;
-  reppoCount: number;
-  computedAt: string;
-  details: Array<{ id: string; predicted: string; expected: string; mid: number | null }>;
-}
+export const CATEGORY_LABEL: Record<string, string> = {
+  food: "Food",
+  fuel: "Fuel and gas",
+  transport: "Transport fares",
+  repair: "Repairs",
+  rent: "Rent",
+  service: "Services",
+};

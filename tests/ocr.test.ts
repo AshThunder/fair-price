@@ -12,3 +12,15 @@ describe("parsePriceFromText", () => {
     expect(parsePriceFromText("fresh tomatoes").amount).toBeNull();
   });
 });
+
+describe("parsePriceFromText on noisy tag reads", () => {
+  it("skips pack sizes and prefers the amount with a naira mark", () => {
+    expect(parsePriceFromText("PALM OIL 75cl N2,450").amount).toBe(2450);
+    expect(parsePriceFromText("TOMATOES 1KG §1,400").amount).toBe(1400);
+    expect(parsePriceFromText("Garri 50kg bag #38,000 2026").amount).toBe(38000);
+  });
+
+  it("does not treat a word ending in n as a naira mark", () => {
+    expect(parsePriceFromText("Golden Penny semovita 900").amount).toBe(900);
+  });
+});

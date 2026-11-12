@@ -1,47 +1,49 @@
-import { reppoKey } from "./env.js";
-import { addReppo, allReppo, allVerdicts, getVerdict, updateVerdict } from "./store.js";
+import { reppoDailyCap, reppoKey } from "./env.js";
+import { getStore } from "./store.js";
 import type { ReppoRecord } from "../shared/types.js";
 
 const BASE = "https://eval.reppo.xyz/api/v1/agents/evals";
+const TERMINAL = new Set(["COMPLETED", "FAILED"]);
 
-export interface ReppoSubmitResult {
-  evalId: string;
-  status: string;
-  creditsCharged: number | null;
+export class ReppoBudgetError extends Error {
+  constructor() {
+    super("The daily Reppo eval budget is used up.");
+    this.name = "ReppoBudgetError";
+  }
 }
 
 function authHeaders(): Record<string, string> {
   const key = reppoKey();
   if (!key) throw new Error("Reppo key is not configured.");
-  return {
-    Authorization: `Bearer ${key}`,
-    "Content-Type": "application/json",
-  };
+  return { Authorization: `Bearer ${key}`, "Content-Type": "application/json" };
 }
 
+export function isTerminal(status: string | null | undefined): boolean {
+  return Boolean(status && TERMINAL.has(status));
+}
+
+/** Submit one eval. Enforces the rolling 24-hour cap before spending credits. */
 export async function submitEval(args: {
   taskType: "claim" | "response" | "action";
   input: string;
   verdictId?: string;
-}): Promise<ReppoSubmitResult> {
+}): Promise<ReppoRecord> {
+  const store = await getStore();
+  const used = await store.countReppoSince(new Date(Date.now() - 24 * 3600_000));
+  if (used >= reppoDailyCap()) throw new ReppoBudgetError();
+
   const response = await fetch(BASE, {
     method: "POST",
     headers: authHeaders(),
-    body: JSON.stringify({
-      taskType: args.taskType,
-      input: args.input.slice(0, 50_000),
-    }),
+    body: JSON.stringify({ taskType: args.taskType, input: args.input.slice(0, 50_000) }),
+    signal: AbortSignal.timeout(15_000),
   });
   if (response.status !== 201 && !response.ok) {
     throw new Error(`Reppo submit returned HTTP ${response.status}.`);
   }
-  const body = (await response.json()) as {
-    id?: string;
-    status?: string;
-    creditsCharged?: number;
-  };
+  const body = (await response.json()) as { id?: string; status?: string; creditsCharged?: number };
   if (!body.id) throw new Error("Reppo submit did not return an id.");
-  const record: ReppoRecord = {
+  const record = await store.upsertReppo({
     evalId: body.id,
     verdictId: args.verdictId ?? "",
     taskType: args.taskType,
@@ -50,14 +52,13 @@ export async function submitEval(args: {
     decision: null,
     route: null,
     reason: null,
-    creditsCharged: body.creditsCharged ?? 0,
+    creditsCharged: body.creditsCharged ?? null,
     createdAt: new Date().toISOString(),
-  };
-  addReppo(record);
+  });
   if (args.verdictId) {
-    updateVerdict(args.verdictId, { reppoEvalId: body.id, reppoStatus: record.status });
+    await store.updateVerdict(args.verdictId, { reppoEvalId: body.id, reppoStatus: record.status });
   }
-  return { evalId: body.id, status: record.status, creditsCharged: record.creditsCharged };
+  return record;
 }
 
 export async function getEval(id: string): Promise<{
@@ -68,10 +69,10 @@ export async function getEval(id: string): Promise<{
   route: string | null;
   reason: string | null;
   creditsCharged: number | null;
-  result?: unknown;
 }> {
   const response = await fetch(`${BASE}/${encodeURIComponent(id)}`, {
     headers: authHeaders(),
+    signal: AbortSignal.timeout(15_000),
   });
   if (!response.ok) throw new Error(`Reppo poll returned HTTP ${response.status}.`);
   const body = (await response.json()) as {
@@ -79,12 +80,7 @@ export async function getEval(id: string): Promise<{
     status?: string;
     score?: number | null;
     creditsCharged?: number | null;
-    result?: {
-      decision?: string;
-      route?: string;
-      reason?: string;
-      score?: number;
-    };
+    result?: { decision?: string; route?: string; reason?: string; score?: number };
   };
   const result = body.result ?? {};
   return {
@@ -95,56 +91,61 @@ export async function getEval(id: string): Promise<{
     route: result.route ?? null,
     reason: result.reason ?? null,
     creditsCharged: body.creditsCharged ?? null,
-    result: body.result,
   };
 }
 
-export async function pollEval(id: string, opts?: { timeoutMs?: number; intervalMs?: number }): Promise<ReturnType<typeof getEval>> {
-  const timeoutMs = opts?.timeoutMs ?? 120_000;
-  const intervalMs = opts?.intervalMs ?? 5_000;
-  const start = Date.now();
-  let last = await getEval(id);
-  while (last.status !== "COMPLETED" && last.status !== "FAILED" && Date.now() - start < timeoutMs) {
-    await new Promise((r) => setTimeout(r, intervalMs));
-    last = await getEval(id);
-  }
-  const record: ReppoRecord = {
-    evalId: last.id,
-    verdictId: getVerdictByEval(id),
-    taskType: "claim",
-    status: last.status,
-    score: last.score,
-    decision: last.decision,
-    route: last.route,
-    reason: last.reason,
-    creditsCharged: last.creditsCharged,
-    createdAt: new Date().toISOString(),
-    completedAt: last.status === "COMPLETED" || last.status === "FAILED" ? new Date().toISOString() : undefined,
-  };
-  addReppo(record);
-  const verdictId = record.verdictId;
-  if (verdictId) {
-    updateVerdict(verdictId, {
-      reppoEvalId: last.id,
-      reppoStatus: last.status,
-      reppoScore: last.score,
-      reppoRoute: last.route,
-      reppoDecision: last.decision,
-      reppoReason: last.reason ?? undefined,
+/**
+ * Poll Reppo once and store the result. Serverless-friendly: callers (the
+ * verdict endpoint, the e2e script) call this repeatedly instead of keeping a
+ * background loop alive. Skips the network call when polled very recently.
+ */
+export async function refreshEval(evalId: string, opts?: { minIntervalMs?: number }): Promise<ReppoRecord | undefined> {
+  const store = await getStore();
+  const existing = await store.getReppo(evalId);
+  if (existing && isTerminal(existing.status)) return existing;
+  const minInterval = opts?.minIntervalMs ?? 4_000;
+  if (existing?.lastPolledAt && Date.now() - Date.parse(existing.lastPolledAt) < minInterval) return existing;
+
+  const live = await getEval(evalId);
+  const now = new Date();
+  const done = isTerminal(live.status);
+  const createdAt = existing?.createdAt ?? now.toISOString();
+  const record = await store.upsertReppo({
+    evalId,
+    verdictId: existing?.verdictId ?? "",
+    taskType: existing?.taskType ?? "claim",
+    status: live.status,
+    score: live.score,
+    decision: live.decision,
+    route: live.route,
+    reason: live.reason,
+    creditsCharged: live.creditsCharged,
+    latencyMs: done ? now.getTime() - Date.parse(createdAt) : null,
+    createdAt,
+    completedAt: done ? now.toISOString() : undefined,
+    lastPolledAt: now.toISOString(),
+  });
+  if (record.verdictId) {
+    await store.updateVerdict(record.verdictId, {
+      reppoEvalId: evalId,
+      reppoStatus: record.status,
+      reppoScore: record.score,
+      reppoRoute: record.route,
+      reppoDecision: record.decision,
+      reppoReason: record.reason ?? undefined,
     });
   }
+  return record;
+}
+
+export async function pollEval(evalId: string, opts?: { timeoutMs?: number; intervalMs?: number }): Promise<ReppoRecord | undefined> {
+  const timeoutMs = opts?.timeoutMs ?? 180_000;
+  const intervalMs = opts?.intervalMs ?? 5_000;
+  const start = Date.now();
+  let last = await refreshEval(evalId, { minIntervalMs: 0 });
+  while (!isTerminal(last?.status) && Date.now() - start < timeoutMs) {
+    await new Promise((r) => setTimeout(r, intervalMs));
+    last = await refreshEval(evalId, { minIntervalMs: 0 });
+  }
   return last;
-}
-
-
-function getVerdictByEval(evalId: string): string {
-  const fromRuntime = allReppo().find((r) => r.evalId === evalId)?.verdictId;
-  if (fromRuntime) return fromRuntime;
-  const fromVerdict = allVerdicts().find((v) => v.reppoEvalId === evalId)?.id;
-  return fromVerdict ?? "";
-}
-
-export async function attachEvalToVerdict(verdictId: string, evalId: string): Promise<void> {
-  const v = getVerdict(verdictId);
-  if (v) updateVerdict(verdictId, { reppoEvalId: evalId });
 }

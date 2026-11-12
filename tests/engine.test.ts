@@ -108,35 +108,26 @@ describe("range and verdicts against May 2026 anchors", () => {
   });
 });
 
-describe("benchmark improvement", () => {
-  it("improves agreement once demo confirms are included", () => {
-    const seedOnly = scoreBenchmark(
-      seed.benchmark,
-      seed.items,
-      seed.areas,
-      seed.officialRefs,
-      demos(),
-      asOf,
-      { seedOnly: true },
-    );
-    const after = scoreBenchmark(
-      seed.benchmark,
-      seed.items,
-      seed.areas,
-      seed.officialRefs,
-      demos(),
-      asOf,
-      { includeDemo: true },
-    );
-    expect(seedOnly.cases).toBe(10);
-    expect(after.agreementRate).toBeGreaterThan(seedOnly.agreementRate);
-    expect(after.agreed).toBe(10);
-    const tomato = seedOnly.details.find((d) => d.id === "bm-6")!;
-    expect(tomato.predicted).toBe("high");
-    const tomatoAfter = after.details.find((d) => d.id === "bm-6")!;
-    expect(tomatoAfter.predicted).toBe("fair");
+describe("demo confirms move the tomato range", () => {
+  it("calls Kano tomatoes at 1400 high on the seed and fair after demo confirms", () => {
+    const item = seed.items.find((i) => i.id === "tomatoes")!;
+    const area = seed.areas.find((a) => a.id === "NG-KANO")!;
+    const before = codeVerdict(item, area, 1400, seed.officialRefs, demos(), seed.areas, asOf, { seedOnly: true });
+    const after = codeVerdict(item, area, 1400, seed.officialRefs, demos(), seed.areas, asOf, { includeDemo: true });
+    expect(before.label).toBe("high");
+    expect(after.label).toBe("fair");
+  });
+
+  it("legacy scoreBenchmark still scores a small case list", () => {
+    const cases = [
+      { id: "a", itemId: "rice-local", areaId: "NG", quoteNaira: 1905.43, expected: "fair" as const, trueNaira: 1905.43, note: "" },
+      { id: "b", itemId: "rice-local", areaId: "NG", quoteNaira: 3200, expected: "high" as const, trueNaira: 1905.43, note: "" },
+    ];
+    const r = scoreBenchmark(cases, seed.items, seed.areas, seed.officialRefs, [], asOf, { seedOnly: true });
+    expect(r.agreed).toBe(2);
   });
 });
+
 
 describe("anti-gaming", () => {
   it("flags prices far from the peer band as outliers", () => {
@@ -245,5 +236,93 @@ describe("sanitize", () => {
     });
     expect(pack).toContain("1905.43");
     expect(pack).not.toMatch(/@|080\d{8}|GPS coordinates/i);
+  });
+});
+
+describe("device trust", () => {
+  it("starts new devices low, rewards accepted confirms, and penalises quarantines", async () => {
+    const { deviceTrust } = await import("../shared/engine.js");
+    expect(deviceTrust({ accepted: 0, quarantined: 0, rejected: 0 })).toBe(0.45);
+    expect(deviceTrust({ accepted: 2, quarantined: 0, rejected: 0 })).toBe(0.75);
+    expect(deviceTrust({ accepted: 10, quarantined: 0, rejected: 0 })).toBe(0.9);
+    expect(deviceTrust({ accepted: 0, quarantined: 3, rejected: 0 })).toBe(0.1);
+    expect(deviceTrust({ accepted: 1, quarantined: 1, rejected: 2 })).toBeCloseTo(0.3, 5);
+  });
+
+  it("uses stored device stats for trust when given", () => {
+    const r = applyAntiGaming({
+      itemId: "garri-white",
+      areaId: "NG-OYO",
+      priceNaira: 820,
+      deviceHash: deviceHash("trusted"),
+      now: asOf,
+      observations: [],
+      refs: seed.officialRefs,
+      areas: seed.areas,
+      device: { accepted: 3, quarantined: 0, rejected: 0 },
+    });
+    expect(r.status).toBe("accepted");
+    expect(r.trust).toBe(0.9);
+  });
+
+  it("rejects a non-positive price", () => {
+    const r = applyAntiGaming({
+      itemId: "garri-white",
+      areaId: "NG-OYO",
+      priceNaira: 0,
+      deviceHash: "x",
+      now: asOf,
+      observations: [],
+      refs: seed.officialRefs,
+      areas: seed.areas,
+    });
+    expect(r.status).toBe("rejected");
+  });
+});
+
+describe("stale anchors and fallback", () => {
+  it("falls back to the national cooking gas anchor for Oyo and the zone anchor for Kano", () => {
+    const item = seed.items.find((i) => i.id === "lpg-12kg")!;
+    const oyo = seed.areas.find((a) => a.id === "NG-OYO")!;
+    const kano = seed.areas.find((a) => a.id === "NG-KANO")!;
+    const o = codeVerdict(item, oyo, 22000, seed.officialRefs, [], seed.areas, asOf, { seedOnly: true });
+    const k = codeVerdict(item, kano, 22000, seed.officialRefs, [], seed.areas, asOf, { seedOnly: true });
+    expect(o.range.fallback).toBe("national");
+    expect(k.range.fallback).toBe("zone");
+    expect(k.range.mid).toBeCloseTo(23276.95, 1);
+  });
+
+  it("lets a cluster of fresh confirmations outweigh one months-old anchor", () => {
+    const item = seed.items.find((i) => i.id === "pms")!;
+    const kano = seed.areas.find((a) => a.id === "NG-KANO")!;
+    const obs: Observation[] = [1410, 1420, 1430].map((p, i) => ({
+      id: `o${i}`,
+      itemId: "pms",
+      areaId: "NG-KANO",
+      priceNaira: p,
+      source: "typed",
+      status: "accepted",
+      trust: 0.45,
+      deviceHash: `d${i}`,
+      createdAt: "2026-11-10T10:00:00Z",
+      tag: "live",
+    }));
+    const seedOnly = codeVerdict(item, kano, 1300, seed.officialRefs, obs, seed.areas, asOf, { seedOnly: true });
+    const after = codeVerdict(item, kano, 1300, seed.officialRefs, obs, seed.areas, asOf, { includeDemo: false });
+    expect(seedOnly.label).toBe("low");
+    expect(after.label).toBe("fair");
+    expect(after.range.mid).toBe(1430);
+  });
+
+  it("ignores quarantined and rejected confirmations when building a range", () => {
+    const item = seed.items.find((i) => i.id === "barbing")!;
+    const abuja = seed.areas.find((a) => a.id === "NG-ABUJA")!;
+    const bad: Observation[] = [
+      { id: "q", itemId: "barbing", areaId: "NG-ABUJA", priceNaira: 9000, source: "typed", status: "quarantine", trust: 0.2, deviceHash: "a", createdAt: "2026-11-10T10:00:00Z" },
+      { id: "r", itemId: "barbing", areaId: "NG-ABUJA", priceNaira: 1500, source: "typed", status: "rejected", trust: 0, deviceHash: "b", createdAt: "2026-11-10T10:00:00Z" },
+    ];
+    const v = codeVerdict(item, abuja, 1500, seed.officialRefs, bad, seed.areas, asOf);
+    expect(v.label).toBe("uncertain");
+    expect(v.range.sampleSize).toBe(0);
   });
 });

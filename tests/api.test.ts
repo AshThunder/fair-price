@@ -13,7 +13,7 @@ describe("API", () => {
       items: unknown[];
       areas: unknown[];
     };
-    expect(catalog.items.length).toBe(13);
+    expect(catalog.items.length).toBe(16);
     expect(catalog.areas.length).toBe(14);
   });
 
@@ -107,18 +107,80 @@ describe("API", () => {
     expect(secondBody.observation.status).toBe("rejected");
   });
 
-  it("publishes board and metrics with a seed-only versus after-feedback gap", async () => {
-    const board = (await json(await app.request("/api/board?areaId=NG-KANO"))) as {
+  it("publishes board and metrics with the held-out benchmark", async () => {
+    const board = (await json(await app.request("/api/board?areaId=NG-KANO&demo=1"))) as {
       rows: Array<{ itemId: string; mid: number | null }>;
     };
     const tomatoes = board.rows.find((r) => r.itemId === "tomatoes");
     expect(tomatoes?.mid).toBeTruthy();
 
     const metrics = (await json(await app.request("/api/metrics"))) as {
-      seedOnly: { agreed: number; cases: number };
-      afterFeedback: { agreed: number; cases: number };
+      benchmark: {
+        totalCases: number;
+        splits: Record<string, { seedOnly: { accuracy: number }; afterFeedback: { accuracy: number } }>;
+      };
+      reppo: { evals: Array<{ source: string }> };
+      live: { checks: number };
     };
-    expect(metrics.seedOnly.cases).toBe(10);
-    expect(metrics.afterFeedback.agreed).toBeGreaterThan(metrics.seedOnly.agreed);
+    expect(metrics.benchmark.totalCases).toBeGreaterThanOrEqual(60);
+    expect(metrics.benchmark.splits.test.afterFeedback.accuracy).toBeGreaterThan(metrics.benchmark.splits.test.seedOnly.accuracy);
+    expect(metrics.live.checks).toBeGreaterThan(0);
+    expect(metrics.reppo.evals.every((e) => e.source === "live")).toBe(true);
+  });
+
+  it("reports store health without leaking keys", async () => {
+    const res = await app.request("/api/health");
+    const body = (await json(res)) as { store: { kind: string; migrations: string[] }; configured: Record<string, boolean> };
+    expect(body.store.kind).toBe("pglite");
+    expect(body.store.migrations).toContain("001_init");
+    expect(Object.values(body.configured).every((v) => typeof v === "boolean")).toBe(true);
+    expect(JSON.stringify(body)).not.toMatch(/key|token/i);
+  });
+
+  it("hides nothing but keeps the Reppo id out of the main verdict fields", async () => {
+    const res = await app.request("/api/check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ itemId: "rice-local", areaId: "NG", quoteNaira: 1905.43, deviceId: "badge", demo: true }),
+    });
+    const body = (await json(res)) as { verdict: { reppo: { state: string; score: number; evalId: string } } };
+    expect(body.verdict.reppo.state).toBe("checked");
+    expect(body.verdict.reppo.score).toBe(64);
+  });
+
+  it("rejects absurd quotes and unknown items", async () => {
+    const bad = await app.request("/api/check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ itemId: "rice-local", areaId: "NG", quoteNaira: 1e12, demo: true }),
+    });
+    expect(bad.status).toBe(400);
+    const unknown = await app.request("/api/check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ itemId: "caviar", areaId: "NG", quoteNaira: 100, demo: true }),
+    });
+    expect(unknown.status).toBe(400);
+  });
+
+  it("keeps demo confirmations out of live ranges", async () => {
+    const deviceId = `iso-${Date.now()}`;
+    const check = (await json(
+      await app.request("/api/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId: "barbing", areaId: "NG-BAUCHI", quoteNaira: 1000, deviceId, demo: true }),
+      }),
+    )) as { verdict: { id: string; label: string } };
+    expect(check.verdict.label).toBe("uncertain");
+    await app.request("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ verdictId: check.verdict.id, kind: "paid", paidNaira: 1000, deviceId, demo: true }),
+    });
+    const liveBoard = (await json(await app.request("/api/board?areaId=NG-BAUCHI&demo=0"))) as { rows: Array<{ itemId: string; observationCount: number }> };
+    expect(liveBoard.rows.find((r) => r.itemId === "barbing")?.observationCount).toBe(0);
+    const demoBoard = (await json(await app.request("/api/board?areaId=NG-BAUCHI&demo=1"))) as { rows: Array<{ itemId: string; observationCount: number }> };
+    expect(demoBoard.rows.find((r) => r.itemId === "barbing")?.observationCount).toBe(1);
   });
 });

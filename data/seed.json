@@ -2,7 +2,7 @@
   "currency": "NGN",
   "country": "NG",
   "generated": "2026-11-12",
-  "disclaimer": "Official figures are May 2026 averages published by the National Bureau of Statistics, not live stall or pump prices. They are dated anchors, cited in place, and are not a redistribution of NBS workbooks.",
+  "disclaimer": "Official figures are dated monthly averages from the National Bureau of Statistics (May 2026; cooking gas April 2026), not live stall or pump prices. They are cited in place, not a redistribution of NBS workbooks.",
   "items": [
     {
       "id": "rice-local",
@@ -54,11 +54,25 @@
       "nbsLabel": "Palm oil, 75cl"
     },
     {
+      "id": "pure-water",
+      "name": "Sachet water (pure water)",
+      "unit": "bag",
+      "category": "food",
+      "nbsLabel": null
+    },
+    {
       "id": "pms",
       "name": "Petrol (premium motor spirit)",
       "unit": "1 litre",
       "category": "fuel",
       "nbsLabel": "Premium Motor Spirit average price per litre"
+    },
+    {
+      "id": "lpg-12kg",
+      "name": "Cooking gas refill (LPG)",
+      "unit": "12.5 kg cylinder",
+      "category": "fuel",
+      "nbsLabel": "Cooking Gas (LPG) 12.5kg refill"
     },
     {
       "id": "bus-city",
@@ -93,6 +107,13 @@
       "name": "Single room monthly rent",
       "unit": "per month",
       "category": "rent",
+      "nbsLabel": null
+    },
+    {
+      "id": "barbing",
+      "name": "Men's haircut at a barbing salon",
+      "unit": "basic cut",
+      "category": "service",
       "nbsLabel": null
     }
   ],
@@ -1344,6 +1365,76 @@
       "retrieved": "2026-11-12",
       "licenceNote": "Used as a dated, cited official average under NBS terms (https://www.nigerianstat.gov.ng/page/terms). Raw NBS workbooks are not included in this repository and are not offered for sale or redistribution.",
       "note": "State average fare paid in Bauchi."
+    },
+    {
+      "id": "ref-lpg-12kg-NG",
+      "itemId": "lpg-12kg",
+      "areaId": "NG",
+      "priceNaira": 22382.2,
+      "grain": "national",
+      "period": "2026-04",
+      "source": "National Bureau of Statistics, Nigeria",
+      "series": "Cooking Gas Price Watch, April 2026",
+      "sourceUrl": "https://nannews.ng/cooking-gas-price-continues-to-rise-nbs/",
+      "retrieved": "2026-11-12",
+      "licenceNote": "NBS Cooking Gas Price Watch, April 2026, as published in the NBS press summary and reported by the News Agency of Nigeria. Only the headline averages quoted in the press are used; no NBS workbook is included.",
+      "note": "Average retail price for refilling a 12.5 kg cylinder."
+    },
+    {
+      "id": "ref-lpg-12kg-NG-Z-NORTH-WEST",
+      "itemId": "lpg-12kg",
+      "areaId": "NG-Z-NORTH-WEST",
+      "priceNaira": 23276.95,
+      "grain": "zone",
+      "period": "2026-04",
+      "source": "National Bureau of Statistics, Nigeria",
+      "series": "Cooking Gas Price Watch, April 2026",
+      "sourceUrl": "https://nannews.ng/cooking-gas-price-continues-to-rise-nbs/",
+      "retrieved": "2026-11-12",
+      "licenceNote": "NBS Cooking Gas Price Watch, April 2026, as published in the NBS press summary and reported by the News Agency of Nigeria. Only the headline averages quoted in the press are used; no NBS workbook is included.",
+      "note": "Average retail price for refilling a 12.5 kg cylinder."
+    },
+    {
+      "id": "ref-lpg-12kg-NG-Z-NORTH-CENTRAL",
+      "itemId": "lpg-12kg",
+      "areaId": "NG-Z-NORTH-CENTRAL",
+      "priceNaira": 22865.29,
+      "grain": "zone",
+      "period": "2026-04",
+      "source": "National Bureau of Statistics, Nigeria",
+      "series": "Cooking Gas Price Watch, April 2026",
+      "sourceUrl": "https://nannews.ng/cooking-gas-price-continues-to-rise-nbs/",
+      "retrieved": "2026-11-12",
+      "licenceNote": "NBS Cooking Gas Price Watch, April 2026, as published in the NBS press summary and reported by the News Agency of Nigeria. Only the headline averages quoted in the press are used; no NBS workbook is included.",
+      "note": "Average retail price for refilling a 12.5 kg cylinder."
+    },
+    {
+      "id": "ref-lpg-12kg-NG-Z-SOUTH-EAST",
+      "itemId": "lpg-12kg",
+      "areaId": "NG-Z-SOUTH-EAST",
+      "priceNaira": 21060.92,
+      "grain": "zone",
+      "period": "2026-04",
+      "source": "National Bureau of Statistics, Nigeria",
+      "series": "Cooking Gas Price Watch, April 2026",
+      "sourceUrl": "https://nannews.ng/cooking-gas-price-continues-to-rise-nbs/",
+      "retrieved": "2026-11-12",
+      "licenceNote": "NBS Cooking Gas Price Watch, April 2026, as published in the NBS press summary and reported by the News Agency of Nigeria. Only the headline averages quoted in the press are used; no NBS workbook is included.",
+      "note": "Average retail price for refilling a 12.5 kg cylinder."
+    },
+    {
+      "id": "ref-lpg-12kg-NG-BAUCHI",
+      "itemId": "lpg-12kg",
+      "areaId": "NG-BAUCHI",
+      "priceNaira": 20178.87,
+      "grain": "state",
+      "period": "2026-04",
+      "source": "National Bureau of Statistics, Nigeria",
+      "series": "Cooking Gas Price Watch, April 2026",
+      "sourceUrl": "https://nannews.ng/cooking-gas-price-continues-to-rise-nbs/",
+      "retrieved": "2026-11-12",
+      "licenceNote": "NBS Cooking Gas Price Watch, April 2026, as published in the NBS press summary and reported by the News Agency of Nigeria. Only the headline averages quoted in the press are used; no NBS workbook is included.",
+      "note": "Average retail price for refilling a 12.5 kg cylinder."
     }
   ],
   "demoObservations": [
@@ -1406,98 +1497,6 @@
       "deviceHash": "demo-dev-e",
       "tag": "demo",
       "note": "Scripted confirmation around the official May 2026 Rivers average."
-    }
-  ],
-  "benchmark": [
-    {
-      "id": "bm-1",
-      "itemId": "rice-local",
-      "areaId": "NG",
-      "quoteNaira": 1905.43,
-      "expected": "fair",
-      "trueNaira": 1905.43,
-      "note": "National official May 2026 average used as the held-out truth. Seed-only and after-feedback should both call this fair."
-    },
-    {
-      "id": "bm-2",
-      "itemId": "rice-local",
-      "areaId": "NG",
-      "quoteNaira": 3200,
-      "expected": "high",
-      "trueNaira": 1905.43,
-      "note": "Far above the May 2026 national average."
-    },
-    {
-      "id": "bm-3",
-      "itemId": "rice-local",
-      "areaId": "NG",
-      "quoteNaira": 900,
-      "expected": "low",
-      "trueNaira": 1905.43,
-      "note": "Far below the May 2026 national average."
-    },
-    {
-      "id": "bm-4",
-      "itemId": "pms",
-      "areaId": "NG-KANO",
-      "quoteNaira": 1607.27,
-      "expected": "fair",
-      "trueNaira": 1607.27,
-      "note": "Kano official May 2026 litre average."
-    },
-    {
-      "id": "bm-5",
-      "itemId": "pms",
-      "areaId": "NG-KANO",
-      "quoteNaira": 2400,
-      "expected": "high",
-      "trueNaira": 1607.27,
-      "note": "Well above the Kano official average."
-    },
-    {
-      "id": "bm-6",
-      "itemId": "tomatoes",
-      "areaId": "NG-KANO",
-      "quoteNaira": 1400,
-      "expected": "fair",
-      "trueNaira": 1260,
-      "note": "Held-out local truth after confirmations clusters near 1260 naira, a little above the May 2026 North-West zonal average of 1182.39. A 1400 naira quote is high against the dated zonal anchor alone, and closer to fair after the feedback cluster. Used to show seed-only versus after-feedback improvement."
-    },
-    {
-      "id": "bm-7",
-      "itemId": "bus-city",
-      "areaId": "NG-ABUJA",
-      "quoteNaira": 1409.81,
-      "expected": "fair",
-      "trueNaira": 1409.81,
-      "note": "Abuja official May 2026 city bus drop average."
-    },
-    {
-      "id": "bm-8",
-      "itemId": "bus-city",
-      "areaId": "NG-ABUJA",
-      "quoteNaira": 2800,
-      "expected": "high",
-      "trueNaira": 1409.81,
-      "note": "About double the official Abuja city-bus average."
-    },
-    {
-      "id": "bm-9",
-      "itemId": "phone-screen",
-      "areaId": "NG-ENUGU",
-      "quoteNaira": 25000,
-      "expected": "uncertain",
-      "trueNaira": null,
-      "note": "No official seed for repairs; should stay uncertain until many confirms exist."
-    },
-    {
-      "id": "bm-10",
-      "itemId": "okada",
-      "areaId": "NG-OYO",
-      "quoteNaira": 999.77,
-      "expected": "fair",
-      "trueNaira": 999.77,
-      "note": "Compared with the official Oyo okada average in the Transport Fare Watch."
     }
   ]
 }

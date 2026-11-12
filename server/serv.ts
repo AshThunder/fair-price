@@ -19,6 +19,7 @@ quotes (array of short evidence summaries, max 3),
 negotiation_tip (one short practical sentence, no emojis),
 evidence_ids (array of ids you actually used).
 If evidence is thin, dated, or missing, verdict must be uncertain.
+Write naira amounts as whole numbers with the ₦ sign, for example ₦1,350.
 Do not mention hidden chain-of-thought.`;
 
 export class ServUnavailableError extends Error {
@@ -64,14 +65,15 @@ export async function judgeWithServ(args: {
   if (!key) throw new ServUnavailableError("SERV key is not configured.");
 
   const { item, area, quote, code } = args;
+  const r = (n: number | null | undefined) => (typeof n === "number" ? String(Math.round(n)) : "none");
   const evidence = code.range.points
-    .map((p) => `${p.id}: ${p.kind} ${p.priceNaira} naira — ${p.label}`)
+    .map((p) => `${p.id}: ${p.kind} ${Math.round(p.priceNaira)} naira — ${p.label}`)
     .join("\n");
   const user = [
     `Item: ${item.name} (${item.id}), unit ${item.unit}, category ${item.category}.`,
     `Area: ${area.name} (${area.id}), kind ${area.kind}.`,
     `Quoted price: ${quote} naira (${naira(quote)}).`,
-    `Code band: mid ${code.range.mid ?? "none"}, low ${code.range.low ?? "none"}, high ${code.range.high ?? "none"}, fallback ${code.range.fallback}, samples ${code.range.sampleSize}.`,
+    `Code band (naira, rounded): mid ${r(code.range.mid)}, low ${r(code.range.low)}, high ${r(code.range.high)}, fallback ${code.range.fallback}, samples ${code.range.sampleSize}.`,
     `Code verdict: ${code.label}. Reasons: ${code.reasonCodes.join(", ")}.`,
     `Evidence pack:`,
     evidence || "(none)",
@@ -79,14 +81,15 @@ export async function judgeWithServ(args: {
 
   const response = await fetch(ENDPOINT, {
     method: "POST",
+    signal: AbortSignal.timeout(Number(process.env.SERV_TIMEOUT_MS ?? "30000")),
     headers: {
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
       model: MODEL,
+      // gpt-5.x reasoning models reject a custom temperature, and SERV requires a system message.
       reasoning_effort: "low",
-      temperature: 0.2,
       messages: [
         { role: "system", content: SYSTEM },
         { role: "user", content: user },
@@ -95,6 +98,9 @@ export async function judgeWithServ(args: {
   });
 
   if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    const message = /"message"\s*:\s*"([^"]{0,200})/.exec(detail)?.[1];
+    console.warn(`SERV HTTP ${response.status}${message ? `: ${message}` : ""}`);
     throw new ServUnavailableError(`SERV returned HTTP ${response.status}.`);
   }
   const body = (await response.json()) as {
